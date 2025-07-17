@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serum Preset Co-Pilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #0d1117;
+            --bg-end: #161b22;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-start);
+            background-image: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            transition: background 0.8s ease-in-out;
+        }
+        .glass-card { 
+            background: rgba(22, 27, 34, 0.6); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px); 
+            border: 1px solid rgba(56, 62, 74, 0.5); 
+            border-radius: 1rem; 
+        }
+        @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out both; }
+        @keyframes loader-bar { 0%, 80%, 100% { transform: scaleY(0.4); opacity: 0.5; } 40% { transform: scaleY(1); opacity: 1; } }
+        .animate-loader-bar { animation: loader-bar 1.2s infinite ease-in-out; }
+        .generate-button {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .generate-button:not(:disabled):hover {
+            box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.3);
+        }
+        .generate-button:not(:disabled):active {
+            transform: scale(0.98);
+            box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.2);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <canvas id="particle-canvas" class="fixed top-0 left-0 w-full h-full -z-10"></canvas>
+    
+    <main class="max-w-6xl mx-auto p-4 md:p-8 relative z-10">
+        <header class="text-center my-8 md:my-12 animate-fade-in">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">Serum Preset Co-Pilot</h1>
+            <p class="text-lg text-gray-400 mt-2">Guide the AI to craft your perfect sound.</p>
+        </header>
+
+        <section class="animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="text-center mb-4"><span class="text-lg font-semibold text-gray-300">1. Select a Genre</span></div>
+            <div id="genre-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-10 gap-3 md:gap-4 mb-10">
+                <!-- Genre cards will be injected here by JavaScript -->
+            </div>
+        </section>
+        
+        <section class="glass-card p-6 mb-10 animate-fade-in" style="animation-delay: 0.4s;">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div class="flex-grow">
+                    <label for="type-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">2. Choose a Type</label>
+                    <select id="type-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+                        <!-- Type options will be injected here -->
+                    </select>
+                </div>
+                <div class="flex-grow">
+                    <label for="mood-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">3. Set the Mood</label>
+                    <select id="mood-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+                        <!-- Mood options will be injected here -->
+                    </select>
+                </div>
+                <div class="md:mt-7">
+                    <button id="generate-button" class="generate-button w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2.5 px-6 rounded-md shadow-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:cursor-not-allowed flex items-center justify-center">
+                        4. Generate Preset
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="results-section" class="min-h-[24rem]">
+            <!-- Results will be injected here -->
+        </section>
+    </main>
+
+    <script type="module">
+        // --- DATA AND STATE MANAGEMENT ---
+        const state = {
+            selections: { genre: null, type: 'Lead', mood: 'Uplifting' },
+            loading: false,
+            preset: null,
+            presetTitle: '',
+            error: null,
+        };
+
+        const genres = [
+            { name: 'House', icon: '🏠' }, { name: 'Techno', icon: '🎛️' }, { name: 'Trance', icon: '🌀' }, { name: 'Dubstep', icon: '🤖' },
+            { name: 'Future Bass', icon: '🎶' }, { name: 'Lo-fi', icon: '☕' }, { name: 'Trap', icon: '⛓️' }, { name: 'Synthwave', icon: '🌅' },
+            { name: 'Drum & Bass', icon: '🥁' }, { name: 'Hip Hop', icon: '🎤' }, { name: 'Cinematic', icon: '🎬' }, { name: 'Ambient', icon: '🌌' },
+            { name: 'R&B', icon: '💖' }, { name: 'Phonk', icon: '💀' }, { name: 'Drill', icon: '🔪' }, { name: 'Hyperpop', icon: '✨' },
+            { name: 'Indie', icon: '🎸' }, { name: 'Folk', icon: '🪕' }, { name: 'Soul', icon: '🎷' }, { name: 'Pop', icon: '🌟' },
+        ];
+        const presetTypes = ['Lead', 'Bass', 'Pad', 'Keys', 'Pluck', 'Arp', 'FX', 'Synth', 'Strings', 'Brass', 'Bell', 'Piano', 'Woodwind', 'Chord'];
+        const presetMoods = ['Uplifting', 'Dark', 'Aggressive', 'Mellow', 'Nostalgic', 'Experimental', 'Cinematic', 'Happy', 'Sad', 'Party', 'Club', 'Chill', 'Dance', 'Groovy'];
+        
+        const moodThemes = {
+            'Default': ['#0d1117', '#161b22'], 'Uplifting': ['#0d1117', '#1a2a45'], 'Happy': ['#111827', '#4a3a1f'],
+            'Party': ['#111827', '#4d1a3d'], 'Club': ['#0d1117', '#3d1a4d'], 'Sad': ['#111827', '#1f2937'],
+            'Mellow': ['#111827', '#1e3a3a'], 'Chill': ['#0d1117', '#1a3a3a'], 'Dark': ['#0d1117', '#221616'],
+            'Aggressive': ['#111827', '#451a1a'], 'Nostalgic': ['#111827', '#3a3a1f'], 'Experimental': ['#111827', '#3a1f4a'],
+            'Cinematic': ['#0d1117', '#1f2937'], 'Dance': ['#111827', '#4d1a4d'], 'Groovy': ['#111827', '#4a3a1f'],
+        };
+
+        const serumWavetables = {
+            'Analog': [
+                'Sine', 'Triangle', 'Sawtooth', 'Square', 'Acid', 'Analog_BD_Sin', 'Basic Mg', 'Basic Mini', 'Basic Shapes', 'Basic_Cjw', 'Basic_McB', 'Basic_Mdc', 'Basic_Wrd',
+                'BS2 - Acid', 'BS2 - Filthy', 'BS2 - Subby Saw', 'BSOD_Square', 'DS Saw and Tri', 'Jno', 'MATRIXY C64',
+                'MB Saw', 'MB Triangle (Metal)', 'Mellow But Instable', 'MiniBass', 'MsAw', 'MsPw', 'PWM C64', 'PWM DS',
+                'PWM Genji', 'PWM Inception', 'PWM Juno', 'PWM LPF', 'PWM Maths 2', 'PWM Maths', 'PWM MedicineHat', 'PWM MG',
+                'PWM Mini', 'PWM Reso', 'PWM Restricted', 'PWM Trench', 'PWM_Mdc', 'SawRounded', '808 Harms', '808 Kick',
+                'AT Alter', 'AT Analog Four', 'AT ARP 2600', 'AT DFAM', 'AT Dixie', 'AT Easel Mod Osc', 'AT Entity',
+                'AT Furth Mood Symmetry', 'AT Furthrrrr', 'AT Harmonic Oscillator Mixer', 'AT Juno 106', 'AT Loquelic iteritas PM',
+                'AT Loquelic lteritas SS', 'AT Matriarch', 'AT Model 10', 'AT Model D', 'AT Mopho x4', 'AT Mother 32',
+                'AT Perfourmer MKI', 'AT Plaits Modal', 'AT Plaits Wavetable', 'AT Promars', 'AT Spectrum', 'AT VCO',
+                'DM-OSCAR', 'DM FMOD 01', 'DM FMOD 02', 'HW -OsC', 'Jungle 808', 'Mello', 'Modular18', 'MWoog',
+                'No Fund Tri Saw Sq', 'Perfect 808 Sub Shapes', 'PolySaw', 'Saw Alice', 'Saw Drift 303'
+            ],
+            'Digital': [
+                'Anti-Stasis', 'bipole_harmonic', 'BottleBlow', 'CrushWub', 'Debussy', 'DirtySaw', 'Dist 8bit Fwap',
+                'Dist Bass Dropper', 'Dist C2', 'Dist d00t', 'Dist Fwapper SQ', 'Dist Sub Dskperc', 'Dist WaTech',
+                'Dull_toy', 'Ethos', 'Evol Longreece', 'Evol Sweep', 'Evolution', 'FFT_Add_2nds', 'FFT_Add_3rds',
+                'FFT_Add_4ths', 'FFT_Animal 1', 'FFT_SQUEAL', 'FMFM', 'FM_Freak', 'FM_Splat', 'Gritty', 'GS-xello',
+                'Harmonic Morph', 'Harmonic Subtle', 'HarmonicSeries', 'Hoo', 'Hypa', 'ICanHaskick', 'Kream', 'Mario',
+                'Misfits', 'PerfectSQSteps', 'Prime', 'PWM Electro', 'PWM Weird', 'Razor', 'Reese', 'Ring', 'Scream',
+                'Shrats', 'Sludgecrank', 'SSQ', 'SubBass_1', 'Tigra', 'VintageSynth', 'Voxu', 'Waveterminal', 'Weow',
+                'Wraith', 'Yoy64', '4 Partials All Combos', '6 Partials All Combos', 'Additive Talk', 'AM Sine Harmonics',
+                'Bark', 'Basic OPL', 'Bass Pluck', 'Belladonna', 'Big Slab', 'Bitspeek 2 Seperate', 'Braids Bell Pluck',
+                'Brass Stab', 'C Morph', 'Chord', 'Dinosaurs', 'DisHarm', 'DX Brass 2', 'DX Hard Attack', 'Dying Saw',
+                'Dying Sine', 'Dying Square', 'Electric Noise', 'FB', 'Fish flips and morphs into Swordfish',
+                'FM Careful Triangle', 'FM Dangerous Saw 2', 'FM Dangerous Saw', 'FM Dirty Square', 'FM Piano',
+                'FM Sine Hell', 'Generative Waves', 'GS Jharp', 'Gtr Harmnx', 'Hand Drawn EBass', 'Hardware Waveforms',
+                'Harm Octave', 'Harmonic Series Smooth', 'Harmonic Squares', 'Harmonize the q', 'Harsh Harm',
+                'HyperSqueak', 'IcanGPT', 'JF Flute', 'Lately', 'Memory Organ', 'Morpheus', 'Mr Bruce Lee',
+                'No Fundamental Saw', 'Only H1', 'Only H2', 'Ooomph', 'Organ Cluster', 'Piano', 'Pieceful', 'Porta Waves',
+                'Random Partials', 'RCM Bass 1', 'RCM Bass 2', 'Renegade', 'Rich Pluck', 'RMrk1 Key Up', 'RMrK1 Tine',
+                'RMrk1', 'Shep. Oct+Fifths', 'Shep, Octaves', 'Sine SuperChirp', 'Sine with Benefits', 'Softest Growl',
+                'Squibble', 'Talking Vox', 'Toucan', 'TrickTreat', 'Tubular', 'Vibing', 'Vocal Hum', 'Voice Simple', 'Voxy'
+            ],
+            'Spectral': ['Alien-Bass', 'Fm-Cross', 'Fm-Sin-Squ', 'Growl-1', 'Growl-2', 'Growl-3', 'Harmonic-Add', 'Harmonic-Sub', 'Organ-Harmonics', 'Over-Sampler', 'Reso-Sweep', 'Reso-Vowel', 'Reso-Vowel-2', 'Scream', 'Sizzle', 'Spectral-1', 'Spectral-2', 'Vocal-Fry', 'Glitch'],
+            'Vowel': ['Vowel-A', 'Vowel-AEI', 'Vowel-AEO', 'Vowel-E', 'Vowel-I', 'Vowel-I-U', 'Vowel-O', 'Vowel-O-A', 'Vowel-U'],
+            'Remap': ['Remap-1', 'Remap-2', 'Remap-3', 'Remap-4']
+        };
+        const serumSamples = {
+            'Piano': ['Piano_F3', 'Piano_G1', 'Piano_A#4'], 'Woodwind': ['Flute_A4', 'Flute_C5'],
+            'Brass': ['Brass_A4', 'Brass_F#3'], 'Strings': ['Bowed_A#3', 'Bowed_C4']
+        };
+        
+        const allValidWavetables = Object.entries(serumWavetables).flatMap(([category, tables]) => 
+            tables.map(table => `${category} > ${table}`)
+        );
+        const acousticTypes = ['Piano', 'Brass', 'Strings', 'Woodwind'];
+
+        // --- DOM ELEMENTS ---
+        const genreGrid = document.getElementById('genre-grid');
+        const typeSelect = document.getElementById('type-select');
+        const moodSelect = document.getElementById('mood-select');
+        const generateButton = document.getElementById('generate-button');
+        const resultsSection = document.getElementById('results-section');
+
+        // --- UI RENDERING FUNCTIONS ---
+        function renderInitialUI() {
+            // Populate genres
+            genreGrid.innerHTML = genres.map(g => `
+                <button data-genre="${g.name}" class="group relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-400">
+                    <div class="absolute inset-0 rounded-2xl bg-gray-800/60 group-hover:bg-gray-700/80 transition-all duration-300"></div>
+                    <div class="absolute inset-0 rounded-2xl border border-gray-700 group-hover:border-gray-600 transition-all duration-300"></div>
+                    <div class="absolute inset-0 rounded-2xl shadow-none group-hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition-all duration-500"></div>
+                    <div class="relative z-10 flex flex-col items-center justify-center space-y-3">
+                        <span class="text-3xl">${g.icon}</span>
+                        <span class="font-semibold text-sm text-center text-gray-300 group-hover:text-white transition-colors duration-300">${g.name}</span>
+                    </div>
+                </button>
+            `).join('');
+
+            // Populate type select
+            typeSelect.innerHTML = presetTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+            typeSelect.value = state.selections.type;
+
+            // Populate mood select
+            moodSelect.innerHTML = presetMoods.map(m => `<option value="${m}">${m}</option>`).join('');
+            moodSelect.value = state.selections.mood;
+            
+            updateResultsUI();
+        }
+
+        function updateResultsUI() {
+            if (state.loading) {
+                resultsSection.innerHTML = `
+                    <div class="flex justify-center items-center p-8">
+                        <div class="w-12 h-12"><div class="animate-pulse flex space-x-1">
+                            <div class="w-3 h-12 bg-blue-400 rounded-full animate-loader-bar" style="animation-delay: 0s"></div>
+                            <div class="w-3 h-12 bg-blue-400 rounded-full animate-loader-bar" style="animation-delay: 0.1s"></div>
+                            <div class="w-3 h-12 bg-blue-400 rounded-full animate-loader-bar" style="animation-delay: 0.2s"></div>
+                        </div></div>
+                    </div>`;
+            } else if (state.error) {
+                resultsSection.innerHTML = `<div class="glass-card p-4 text-center text-red-400">${state.error}</div>`;
+            } else if (state.preset) {
+                const sections = state.preset.split('###').filter(section => {
+                    const trimmedSection = section.trim();
+                    return trimmedSection !== '' && !trimmedSection.toUpperCase().startsWith('PRESET NAME');
+                });
+                
+                const presetHTML = sections.map((section, index) => {
+                    const lines = section.trim().split('\n');
+                    const title = lines.shift().trim().replace(/#/g, '');
+                    const content = lines.filter(line => line.trim() !== '' && line.includes(':'));
+                    if (content.length === 0) return '';
+                    
+                    const listItems = content.map(line => {
+                        const [key, ...valueParts] = line.split(':');
+                        return `<li class="text-gray-300 text-sm p-2 rounded-md"><span><strong class="font-semibold text-gray-200">${key}:</strong> ${valueParts.join(':').trim()}</span></li>`;
+                    }).join('');
+
+                    return `
+                        <div class="glass-card mb-4 animate-fade-in-up" style="animation-delay: ${index * 50}ms">
+                            <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left">
+                                <h3 class="text-lg font-bold text-blue-300">${title}</h3>
+                                <svg class="w-6 h-6 text-gray-400 transform transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <div class="accordion-content px-4 pb-4">
+                                <ul class="space-y-2 border-t border-gray-700/50 pt-3">${listItems}</ul>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                resultsSection.innerHTML = `
+                    <div class="animate-fade-in">
+                        <h2 class="text-2xl font-bold text-center mb-6 text-white">
+                            <span class="text-blue-400">${state.presetTitle}</span>
+                        </h2>
+                        ${presetHTML}
+                    </div>`;
+            } else {
+                resultsSection.innerHTML = `
+                    <div class="flex items-center justify-center h-full min-h-[24rem] animate-fade-in" style="animation-delay: 0.6s;">
+                        <div class="text-center glass-card p-8">
+                            <h3 class="text-lg font-semibold text-gray-200">Follow the steps above to begin</h3>
+                            <p class="text-gray-400 mt-1">Your unique preset guide will appear here.</p>
+                        </div>
+                    </div>`;
+            }
+            attachAccordionListeners();
+        }
+        
+        // --- EVENT HANDLERS ---
+        function handleGenreSelect(e) {
+            const button = e.target.closest('button');
+            if (!button) return;
+            
+            const genre = button.dataset.genre;
+            state.selections.genre = genre;
+
+            document.querySelectorAll('#genre-grid button').forEach(btn => {
+                const container = btn.children[0];
+                const border = btn.children[1];
+                const shadow = btn.children[2];
+                if (btn.dataset.genre === genre) {
+                    btn.classList.add('scale-105');
+                    container.classList.remove('bg-gray-800/60', 'group-hover:bg-gray-700/80');
+                    container.classList.add('bg-blue-500/20');
+                    border.classList.remove('border-gray-700', 'group-hover:border-gray-600');
+                    border.classList.add('border-blue-400');
+                    shadow.classList.add('shadow-[0_0_20px_rgba(59,130,246,0.5)]');
+                } else {
+                    btn.classList.remove('scale-105');
+                    container.classList.add('bg-gray-800/60', 'group-hover:bg-gray-700/80');
+                    container.classList.remove('bg-blue-500/20');
+                    border.classList.add('border-gray-700', 'group-hover:border-gray-600');
+                    border.classList.remove('border-blue-400');
+                    shadow.classList.remove('shadow-[0_0_20px_rgba(59,130,246,0.5)]');
+                }
+            });
+            generateButton.disabled = false;
+        }
+
+        function attachAccordionListeners() {
+            document.querySelectorAll('.accordion-toggle').forEach(button => {
+                button.onclick = () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('svg');
+                    icon.classList.toggle('rotate-180');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                };
+            });
+        }
+
+        // --- API & LOGIC ---
+        const getCreativePrompt = (genre, type, mood) => {
+            const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const character = `${mood}, ${getRandom(['analog', 'digital', 'warm', 'bright', 'gritty', 'glassy', 'metallic', 'wooden', 'breathy'])}, and ${getRandom(['punchy', 'driving', 'relaxed', 'plucky', 'sustained', 'evolving', 'chaotic', 'rhythmic'])}`;
+            const seed = getRandom([
+                "The core rhythmic element must come from LFO 2, set to a complex custom shape in 'Envelope' mode, modulating the filter cutoff and oscillator pitch.",
+                "The FX rack MUST use a Phaser or Flanger BEFORE the main distortion and reverb to create a unique texture.",
+                "Macro 1 MUST seamlessly transform the sound from a short, dry pluck into a vast, washed-out ambient pad by controlling Reverb Mix, ENV 1 Release, and Filter Cutoff.",
+                "The sound must heavily feature the 'Bend+' warp mode on OSC A, modulated by a very fast, chaotic LFO.",
+                "The filter's Drive should be modulated by its own Envelope (ENV 2), creating a sound that gets dirtier on the attack.",
+            ]);
+
+            let specialInstructions = '';
+            if (acousticTypes.includes(type)) {
+                const sampleCategory = serumSamples[type] ? type : (type === 'Strings' ? 'Strings' : 'Woodwind');
+                const availableSamples = serumSamples[sampleCategory].join(', ');
+                specialInstructions = `
+**SPECIAL INSTRUCTION FOR ACOUSTIC PRESET:**
+- The core of this sound MUST come from the **Noise Oscillator**.
+- Load a sample into the Noise Oscillator. Choose one from the following list: **[${availableSamples}]**.
+- **Crucially, you MUST enable Key Tracking (the keyboard icon) and set Pitch to 100 on the Noise Oscillator** to make the sample playable.
+- The main oscillators (OSC A, OSC B) should be used subtly, if at all, to add texture.
+`;
+            }
+
+            return `
+You are a world-class sound designer using Xfer Records Serum 2. Your task is to create a highly detailed, creative, and genre-authentic preset. Your highest priority is creativity and uniqueness, guided by the user's request.
+The user wants a preset for the **${genre}** genre. The sound type must be: **a ${type}**. Its primary character and mood must be: **${character}**.
+**Creative Seed / Constraint:** To ensure uniqueness, you must incorporate the following creative constraint: ${seed}
+${specialInstructions}
+Provide the detailed settings below, starting with a unique name for the preset.
+**IMPORTANT:** Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic values. For wavetables, use the format "Category > WavetableName".
+
+### PRESET NAME
+- Name: [Create a unique, evocative name for this specific preset]
+### PRESET DESCRIPTION
+- Description: [Describe the character and ideal use for this sound in 1-2 sentences.]
+### OSC A
+- Wavetable: [e.g., Analog > Sawtooth]
+### OSC B
+- Wavetable: [e.g., Analog > Juno]
+### SUB OSCILLATOR
+- Waveform: [e.g., Sine]
+### NOISE OSCILLATOR
+- Type: [For acoustic types, use a sample like 'Piano_F3'. For others, e.g., 'Analog > J106 HPF']
+- Keytrack: [On/Off]
+- Pitch: [Value]
+### FILTER
+- Type: [e.g., MG Low 24]
+### LFO 1
+- Shape: [e.g., Triangle]
+### ENV 1 (AMP)
+- Attack: [ms]
+### VOICING
+- Mode: [Mono or Poly]
+### FX RACK
+- Slot 1: [Effect Type]
+- Slot 2: [Effect Type]
+- Slot 3: [Effect Type]
+### MACRO CONTROLS
+- Macro 1 Name: [Invent a creative name, e.g., "Grit", "Shimmer", "Warp"]
+- Macro 1 -> Destination 1: [Parameter Name, e.g., Filter Cutoff]
+- Macro 1 -> Range 1: [Modulation range, e.g., 20% -> 85%]
+- Macro 1 -> Destination 2: [Parameter Name, e.g., OSC A WT-Pos]
+- Macro 1 -> Range 2: [Modulation range, e.g., 0 -> 128]
+`;
+        };
+
+        async function generatePreset() {
+            if (!state.selections.genre) {
+                state.error = "Please select a genre first.";
+                updateResultsUI();
+                return;
+            }
+            state.loading = true;
+            state.preset = null;
+            state.presetTitle = '';
+            state.error = null;
+            updateResultsUI();
+
+            const prompt = getCreativePrompt(state.selections.genre, state.selections.type, state.selections.mood);
+
+            try {
+                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                
+                // ===================================================================
+                // PASTE YOUR API KEY HERE
+                // ===================================================================
+                const apiKey = "PASTE_YOUR_API_KEY_HERE"; 
+                // ===================================================================
+
+                if (apiKey === "PASTE_YOUR_API_KEY_HERE" || apiKey === "") {
+                    throw new Error("API Key is missing. Please get a key from Google AI Studio and paste it into the script.");
+                }
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}. Please try again.`);
+                const result = await response.json();
+
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    let fullText = result.candidates[0].content.parts[0].text;
+                    
+                    const validateAndCorrect = (text, presetType) => {
+                        const lines = text.split('\n');
+                        let inNoiseSection = false;
+
+                        const correctedLines = lines.map(line => {
+                            if (line.trim().startsWith('###')) {
+                                inNoiseSection = line.includes('NOISE OSCILLATOR');
+                            }
+
+                            if (line.trim().startsWith('- Wavetable:')) {
+                                const parts = line.split(':');
+                                const key = parts[0];
+                                let value = parts.slice(1).join(':').trim();
+
+                                if (value === 'Analog > Basic Shapes') {
+                                    const specificShapes = ['Sine', 'Triangle', 'Sawtooth', 'Square'];
+                                    const randomShape = specificShapes[Math.floor(Math.random() * specificShapes.length)];
+                                    value = `Analog > ${randomShape}`;
+                                }
+                                
+                                if (!allValidWavetables.includes(value)) {
+                                    const randomValidWavetable = allValidWavetables[Math.floor(Math.random() * allValidWavetables.length)];
+                                    return `${key}: ${randomValidWavetable}`;
+                                }
+                                return `${key}: ${value}`;
+                            }
+
+                            if (inNoiseSection && line.trim().startsWith('- Type:') && acousticTypes.includes(presetType)) {
+                                const parts = line.split(':');
+                                const key = parts[0];
+                                const value = parts.slice(1).join(':').trim();
+                                const sampleCategory = serumSamples[presetType] ? presetType : (presetType === 'Strings' ? 'Strings' : 'Woodwind');
+                                const validSamplesForType = serumSamples[sampleCategory];
+                                
+                                if (!validSamplesForType.includes(value)) {
+                                    const randomValidSample = validSamplesForType[Math.floor(Math.random() * validSamplesForType.length)];
+                                    return `${key}: ${randomValidSample}`;
+                                }
+                            }
+                            return line;
+                        });
+                        return correctedLines.join('\n');
+                    };
+
+                    const correctedText = validateAndCorrect(fullText, state.selections.type);
+
+                    const nameMatch = correctedText.match(/### PRESET NAME\s*\n-\s*Name:\s*(.*)/i);
+                    state.presetTitle = nameMatch ? nameMatch[1].trim() : `A ${state.selections.mood} ${state.selections.genre} ${state.selections.type}`;
+                    state.preset = correctedText;
+
+                } else {
+                    throw new Error('The model did not return a valid preset. This might be due to content restrictions. Please try a different genre or combination.');
+                }
+            } catch (err) {
+                state.error = err.message;
+            } finally {
+                state.loading = false;
+                updateResultsUI();
+            }
+        }
+
+        // --- PARTICLE BACKGROUND ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5 + 0.5,
+                    speedX: Math.random() * 0.4 - 0.2,
+                    speedY: Math.random() * 0.4 - 0.2,
+                    opacity: Math.random() * 0.5 + 0.2,
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                if (p.x > canvas.width || p.x < 0) p.speedX *= -1;
+                if (p.y > canvas.height || p.y < 0) p.speedY *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            renderInitialUI();
+            
+            genreGrid.addEventListener('click', handleGenreSelect);
+            typeSelect.addEventListener('change', (e) => state.selections.type = e.target.value);
+            moodSelect.addEventListener('change', (e) => {
+                state.selections.mood = e.target.value;
+                const [start, end] = moodThemes[state.selections.mood] || moodThemes['Default'];
+                document.documentElement.style.setProperty('--bg-start', start);
+                document.documentElement.style.setProperty('--bg-end', end);
+            });
+            generateButton.addEventListener('click', generatePreset);
+
+            resizeCanvas();
+            animateParticles();
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+</html>
