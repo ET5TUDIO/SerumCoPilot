@@ -10,14 +10,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-start: #0d1117;
-            --bg-end: #161b22;
+            /* Gradient Set A */
+            --bg-start-a: #0d1117;
+            --bg-end-a: #161b22;
+            --opacity-a: 1;
+            /* Gradient Set B */
+            --bg-start-b: #0d1117;
+            --bg-end-b: #161b22;
+            --opacity-b: 0;
         }
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-start);
-            background-image: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
-            transition: background 0.8s ease-in-out;
+            background-color: #0d1117; /* Fallback color */
+        }
+        /* Pseudo-elements for cross-fading background gradient */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -20; /* Place behind the particle canvas */
+            transition: opacity 1.5s ease-in-out;
+        }
+        body::before {
+            background-image: linear-gradient(180deg, var(--bg-start-a) 0%, var(--bg-end-a) 100%);
+            opacity: var(--opacity-a);
+        }
+        body::after {
+            background-image: linear-gradient(180deg, var(--bg-start-b) 0%, var(--bg-end-b) 100%);
+            opacity: var(--opacity-b);
         }
         .glass-card { 
             background: rgba(22, 27, 34, 0.6); 
@@ -117,6 +137,7 @@
             preset: null,
             presetTitle: '',
             error: null,
+            activeGradientSet: 'a', // 'a' or 'b'
         };
 
         const genres = [
@@ -127,7 +148,7 @@
             { name: 'Future Bass', icon: '🎶' },
             { name: 'Lo-fi', icon: '☕' },
             { name: 'Trap', icon: '⛓️', subgenres: ['Hardwave', 'Hybrid Trap', 'Cloud Rap'] },
-            { name: 'Drill', icon: '🔪', subgenres: ['UK Drill', 'NY Drill', 'Jersey Drill'] },
+            { name: 'Drill', icon: '�', subgenres: ['UK Drill', 'NY Drill', 'Jersey Drill'] },
             { name: 'Phonk', icon: '💀', subgenres: ['Drift Phonk', 'Memphis Phonk', 'Phonk Wave'] },
             { name: 'Synthwave', icon: '🌅', subgenres: ['Darksynth', 'Outrun', 'Retrowave'] },
             { name: 'Drum & Bass', icon: '🥁', subgenres: ['Neurofunk', 'Liquid D&B', 'Jump-Up', 'Dancefloor D&B'] },
@@ -142,14 +163,32 @@
             { name: 'Hyperpop', icon: '✨' },
         ];
         const presetTypes = ['Lead', 'Bass', 'Pad', 'Keys', 'Pluck', 'Arp', 'FX', 'Synth', 'Strings', 'Brass', 'Bell', 'Piano', 'Woodwind', 'Chord'];
-        const presetMoods = ['Uplifting', 'Dark', 'Aggressive', 'Mellow', 'Nostalgic', 'Experimental', 'Cinematic', 'Happy', 'Sad', 'Party', 'Club', 'Chill', 'Dance', 'Groovy'];
+        const presetMoods = ['Aggressive', 'Ambient', 'Chill', 'Cinematic', 'Club', 'Dance', 'Dark', 'Dreamy', 'Dynamic', 'Energetic', 'Experimental', 'Funky', 'Groovy', 'Happy', 'Intense', 'Mellow', 'Nostalgic', 'Party', 'Sad', 'Smooth', 'Soothing', 'Uplifting'];
         
         const moodThemes = {
-            'Default': ['#0d1117', '#161b22'], 'Uplifting': ['#0d1117', '#1a2a45'], 'Happy': ['#111827', '#4a3a1f'],
-            'Party': ['#111827', '#4d1a3d'], 'Club': ['#0d1117', '#3d1a4d'], 'Sad': ['#111827', '#1f2937'],
-            'Mellow': ['#111827', '#1e3a3a'], 'Chill': ['#0d1117', '#1a3a3a'], 'Dark': ['#0d1117', '#221616'],
-            'Aggressive': ['#111827', '#451a1a'], 'Nostalgic': ['#111827', '#3a3a1f'], 'Experimental': ['#111827', '#3a1f4a'],
-            'Cinematic': ['#0d1117', '#1f2937'], 'Dance': ['#111827', '#4d1a4d'], 'Groovy': ['#111827', '#4a3a1f'],
+            'Default': ['#0d1117', '#161b22'], 
+            'Uplifting': ['#0d1117', '#1a2a45'], 
+            'Happy': ['#111827', '#4a3a1f'], 
+            'Party': ['#111827', '#4d1a3d'], 
+            'Club': ['#0d1117', '#3d1a4d'], 
+            'Sad': ['#111827', '#1f2937'], 
+            'Mellow': ['#111827', '#1e3a3a'], 
+            'Chill': ['#0d1117', '#1a3a3a'], 
+            'Dark': ['#0d1117', '#221616'], 
+            'Aggressive': ['#111827', '#451a1a'], 
+            'Nostalgic': ['#111827', '#3a3a1f'], 
+            'Experimental': ['#111827', '#3a1f4a'], 
+            'Cinematic': ['#0d1117', '#1f2937'], 
+            'Dance': ['#111827', '#4d1a4d'], 
+            'Groovy': ['#111827', '#4a3a1f'],
+            'Ambient': ['#0d1117', '#1a3a3a'],
+            'Dynamic': ['#0d1117', '#3d1a4d'],
+            'Energetic': ['#111827', '#4a3a1f'],
+            'Funky': ['#111827', '#4d1a3d'],
+            'Smooth': ['#111827', '#1f2937'],
+            'Soothing': ['#111827', '#1e3a3a'],
+            'Dreamy': ['#111827', '#3a1f4a'],
+            'Intense': ['#111827', '#451a1a'],
         };
 
         const serumWavetables = {
@@ -159,15 +198,16 @@
             'Vowel': ['Vowel-A', 'Vowel-AEI', 'Vowel-AEO', 'Vowel-E', 'Vowel-I', 'Vowel-I-U', 'Vowel-O', 'Vowel-O-A', 'Vowel-U', 'Allophones', 'DudaChoir', 'E_Yeah', 'Fred Like Bass', 'ML Addifunk', 'Native Curse', 'OOH YAH 00', 'LLI', 'Retro Speaking', 'SAM SERUM', 'SAM Speaks', 'WahWah'],
             'Remap': ['Remap-1', 'Remap-2', 'Remap-3', 'Remap-4']
         };
-        const serumSamples = {
-            'Piano': ['Breathy Pianoish', 'EPiano Chord', 'Piano High Long Tail', 'Piano Middle C', '44', 'Piano', 'Sympathy Piano C4'],
-            'Woodwind': ['Aztec Pipe', 'Betty', 'Flute Delay', 'Flute Fula Long', 'Flute Fula', 'Flute Long Stab', 'Flute Long Vibrato', 'Flute Rainforest', 'Flute Staccato', 'Flute Virtual', 'Flute Warm', 'Pan Flute', 'Savanna'],
-            'Brass': ['Brass WallLow', 'Horn Stab Emin', 'Trombone Alt', 'II', 'stc A#1', 'GG3', 'Trombone short', 'Trombone short stc', 'Trombone', 'Tuba short stc G1'],
-            'Strings': ['Celli ColLegno F#1', 'Celli Short G#2', 'Cello Finger Gliss UpC2', 'Doubled Tension', 'Doubled Vibrato', 'Erhu', 'Horsehead Fiddle', 'Morin Khuur Sustained', 'Strings Crystal Joy', 'Strings Heady', 'Strings Oblinas', 'Unhappy Chatty Cello', 'Upright Bass rco Long', 'Upright Bass Arco Short', 'ViolinsHalf Harm Glissh E5']
+        const serumNoises = {
+            'Analog': ['AlphaNz', 'ARP circult', 'ARP pink', 'ARP white', 'BrightWhite', 'J60', 'J8', 'J106 Chorus', 'J106 HP', 'J106 HP_Cho', 'J106', 'Micrkrg Noise', 'OrganNolise', 'SH1 Noise', 'SID drone', 'SID noise', 'SID whine'],
+            'Organics': ['AC hum1', 'AC hum2', 'Air Can 1', 'Air Can 2', 'Air Can 3', 'Air Can 4', 'Air Can 5', 'CymLoop', 'CymMicBleed', 'H-Breath', 'Paper Bag', 'S-Sound', 'Shush 1', 'Shush 2', 'Squeeky', 'WindChimes'],
+            'S2 Noises': ['808 Transient', 'Arctic Visit', 'Blip', 'Cicadas', 'Crackle', 'Egtr Mute', 'Egtr Neck Down', 'Egtr Neck Up', 'Fizz', 'FretNoise A', 'FretNoise B', 'FretNoise C', 'HP12 Pink Noise (Mono)', 'HP12 Pink Noise (Stereo)', 'HP12 White Noise (Stereo)', 'Keys and Ball', 'Pebbles in Tube', 'Radio Glitch', 'Rain 100 Hgh', 'Rising Wind', 'SaW', 'Screws in Bowl', 'Sine Wave C', 'Stretched Vlnyl', 'Vinyl Crackle', 'Whif'],
+            'SOR': ['Analog Flow', 'Atmos 05', 'Atmos 07', 'Atmos 11', 'Atmos 14', 'Atmos 18', 'Atmos 20', 'Atmos 44', 'Atmos 45', 'Atmos 47', 'Atmos 52', 'Bonecrusher', 'Dark Phuture', 'Electric Bubbles', 'Electricity', 'Elysium', 'FX5', 'Horns Of Fear', 'Horrorwind', 'Metalmaster', 'Place f Fear', 'Polar 1', 'Polar 2', 'Prophecy', 'Rising', 'Strange Flow', 'Waterworld'],
+            'Color': ['White', 'Pink', 'Brown', 'Geiger']
         };
         
         const allValidWavetables = Object.entries(serumWavetables).flatMap(([category, tables]) => tables.map(table => `${category} > ${table}`));
-        const acousticTypes = ['Piano', 'Brass', 'Strings', 'Woodwind'];
+        const allValidNoises = Object.entries(serumNoises).flatMap(([category, noises]) => noises.map(noise => `${category} > ${noise}`));
 
         // --- DOM ELEMENTS ---
         const genreGrid = document.getElementById('genre-grid');
@@ -385,7 +425,41 @@
                 'Ambient': `Timbres: Texture and atmosphere are everything. Use any wavetable, but process it heavily. Evolving pads, granular textures (use Noise OSC with unusual samples), and gentle drones. Filter: Very slow LFO modulation on the filter cutoff to create constant, subtle movement. The Reverb filter can be a powerful tool here. AVOID: Short, percussive sounds; anything that feels rushed.`,
                 'Hyperpop': `Timbres: Extreme, chaotic, and digital. Aggressive digital wavetables, heavy FM, and bit-crushed sounds. Supersaws are pitched up and heavily processed. Filter: Used for aggressive, fast modulation. Formant and comb filters are common. The Scream LP is a great choice. AVOID: Natural, subtle, or clean sounds.`,
             };
+
+            const serumFxKnowledge = `
+                **Serum FX Knowledge Base:**
+                - **Hyper/Dimension:** Adds stereo width. Hyper is a unison chorus, Dimension is a Haas-effect widener. Key parameters: For Hyper, specify Rate, Detune, and Mix. For Dimension, specify Size and Mix. Pro Tip: Use low Mix values for subtle width.
+                - **Distortion:** Adds grit and harmonics. Key Types: Tube, Tape, Diode 1, Diode 2, Hardclip, Downsample. Key parameters: Drive, Mix. The 'Post' switch determines if filtering happens before or after distortion. Pro Tip: 'Tube' for warmth, 'Hardclip' for aggression. Use the filter to tame harshness.
+                - **Flanger:** Creates a sweeping, metallic "jet engine" sound. Key parameters: Rate, Depth, Feed(back), Mix. Pro Tip: Sync Rate to tempo for rhythmic effects.
+                - **Phaser:** Creates a smooth, swirling sound with notches in the frequency spectrum. Key parameters: Rate, Depth, Freq(uency), Feed(back), Mix. Pro Tip: Excellent for adding movement to pads.
+                - **Chorus:** Thickens the sound by creating detuned copies. Key parameters: Rate, Depth, Delay 1, Delay 2, Feed(back), Mix. Pro Tip: A classic effect for 80s synth sounds and making leads sound richer.
+                - **Compressor:** Controls dynamics. Key Modes: Normal or Multiband (OTT). Key parameters: Thresh(old), Ratio, Attack, Release, Gain. For Multiband, specify the High, Mid, and Low gain amounts. Pro Tip: Multiband (OTT) is a signature effect in many electronic genres for extreme squashing and bringing out detail.
+                - **Reverb:** Creates a sense of space. Key Types: Plate, Hall, Room. Key parameters: Size, Decay, Low Cut, High Cut, Mix. Pro Tip: Use Low Cut to prevent muddy bass frequencies. 'Plate' is great for vocals/leads, 'Hall' for epic pads.
+                - **EQ:** Shapes the tonal balance. Key parameters: Specify the band you're adjusting (e.g., Low, Mid, High), the frequency (Hz), the Q (bandwidth), and the Gain (dB). Pro Tip: Use to cut unnecessary frequencies (like low-end on a lead) or boost characterful ones.
+                - **Filter:** An extra filter for sound shaping. Has all the same types as the main filter. Key parameters: Type, Cutoff, Res(onance), Drive, Mix. Pro Tip: Use a High-Pass type to clean up low-end, or automate the Cutoff for sweeps.
+                - **Delay:** Creates echoes. Key parameters: Mode (Normal, Ping-Pong), Rate (e.g., 1/4, 1/8d), Feedback, Mix. Pro Tip: 'Ping-Pong' creates a wide stereo delay. Use the filter in the delay to make echoes darker or brighter.
+            `;
             
+            const serumNoiseKnowledge = `
+                **Serum Noise Knowledge Base:**
+                - The following noise samples are available, grouped by category.
+                - **Analog:** ${serumNoises.Analog.join(', ')}
+                - **Organics:** ${serumNoises.Organics.join(', ')}
+                - **S2 Noises:** ${serumNoises['S2 Noises'].join(', ')}
+                - **SOR:** ${serumNoises.SOR.join(', ')}
+                - **Color:** ${serumNoises.Color.join(', ')}
+            `;
+
+            const serumFilterKnowledge = `
+                **Serum Filter Knowledge Base:**
+                - Filters are grouped into categories.
+                - **Normal Lowpass:** MG Low 6, MG Low 12, MG Low 18, MG Low 24, French LP, German LP, Acid LP.
+                - **Normal Highpass:** MG High 6, MG High 12, MG High 18, MG High 24.
+                - **Normal Band/Peak/Notch:** Band 12, Band 24, Peak 12, Peak 24, Notch 12, Notch 24.
+                - **Multi:** Multi LP/HP/BP/PK/NO (e.g., Multi LP/HP).
+                - **Flanges/Misc:** Comb P, Comb M, Flg P, Flg M, Allpass, Reverb, Scream LP, Dist.Comb.
+            `;
+
             const genreSpecifics = genreKnowledge[fullGenre] || genreKnowledge[genre] || 'No specific principles loaded. Rely on general professional knowledge.';
 
             const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -404,6 +478,10 @@ ${inspirationInstruction}
 **Sound Design Principles for ${fullGenre}:**
 ${genreSpecifics}
 
+${serumFxKnowledge}
+${serumNoiseKnowledge}
+${serumFilterKnowledge}
+
 **Instructions:**
 Provide the detailed settings below, starting with a unique, evocative name for the preset and a brief description. Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic, professional values based on the principles above. For wavetables, use the format "Category > WavetableName".
 
@@ -414,9 +492,9 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Description: [Describe the character and ideal use for this sound in 1-2 sentences, keeping the genre in mind]
 
 ### OSC A
-- Wavetable: [Choose a wavetable that is highly appropriate for the genre, e.g., Analog > Juno for Synthwave, Spectral > Growl-1 for Dubstep]
-- Unison: [Set a professional value. e.g., 1 for sub basses, 2-5 for most sounds, 7+ for Trance supersaws]
-- Detune: [Use subtle detuning for warmth, or higher values for wide supersaws. AVOID extreme, unusable detuning.]
+- Wavetable: [Choose a wavetable that is highly appropriate for the genre]
+- Unison: [Set a professional value. e.g., 1 for subs, 2-5 for most sounds, 7+ for supersaws]
+- Detune: [Use subtle detuning for warmth, or higher values for wide supersaws]
 - Warp Mode: [Choose a mode that adds character, e.g., Bend, FM, Sync. Specify the amount.]
 
 ### OSC B
@@ -426,24 +504,24 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Level: [Adjust to blend well with OSC A. Does not always need to be at 100%.]
 
 ### SUB OSCILLATOR
-- Waveform: [Typically Sine for clean low-end, or Triangle for slightly more harmonics. AVOID Square unless for specific aggressive sounds.]
-- Level: [Crucial for the low-end foundation. Set appropriately for the sound type. For a sub-bass, this might be the main sound source.]
+- Waveform: [Typically Sine for clean low-end, or Triangle for more harmonics.]
+- Level: [Crucial for the low-end foundation. Set appropriately for the sound type.]
 
 ### NOISE OSCILLATOR
-- Type: [Choose a noise type for texture (e.g., Bright White) or a genre-specific sample (e.g., vinyl crackle for Lo-fi, acoustic sample for Folk).]
+- Type: [Refer to the **Serum Noise Knowledge Base** and choose an appropriate sample. Format it as "Category > SampleName".]
 - Pitch: [Adjust if using a tonal sample.]
 - Level: [Use subtly to add texture and character without overpowering the sound.]
 
 ### FILTER
-- Type: [Choose a professional and genre-appropriate filter type from the full list (Normal, Multi, Flanges, Misc, S2). **Do NOT default to MG Low 24 unless it is the best professional choice for the genre.** For example, use a Comb or Phs filter for Neurofunk, or a German LP for Techno.]
-- Cutoff: [Set a musically useful starting point. AVOID leaving it wide open at 20kHz unless intentional.]
-- Resonance: [Use sparingly for character. AVOID high values that create unpleasant whistling, unless it's a core part of the sound (e.g., Acid).]
-- Drive: [Add subtle warmth and saturation. High values can be used for aggressive sounds.]
+- Type: [Refer to the **Serum Filter Knowledge Base** and choose a professional and genre-appropriate filter type. **Do NOT default to MG Low 24.** Do NOT use noise samples here.]
+- Cutoff: [Set a musically useful starting point.]
+- Resonance: [Use sparingly for character.]
+- Drive: [Add subtle warmth and saturation.]
 
 ### ENV 1 (AMP)
 - Attack: [Set a realistic value. e.g., ~0ms for basses/plucks, 50ms+ for pads.]
 - Decay: [Adjust for the sound's length.]
-- Sustain: [0 for plucks/percussion. -inf dB is 0. High for pads/leads.]
+- Sustain: [0 for plucks/percussion. High for pads/leads.]
 - Release: [Set a musically useful value. e.g., 100-400ms for plucks, 1s+ for pads.]
 
 ### LFO 1
@@ -453,19 +531,28 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Mod Depth: [Apply subtle modulation. AVOID extreme, unmusical depth.]
 
 ### FX RACK
-- The available FX modules are: Bode, Chorus, Compressor, Convolve, Delay, Distortion, Equalizer, Filter, Flanger, Hyper/Dimension, Phaser, Reverb, Splitter L/H, Splitter L/M/H, Splitter M/S, Utility. Choose up to 4 effects in a logical order.
-- Slot 1: [Choose an effect and specify its key parameters. Common starting points are **Distortion** (specify Type and Drive), **Equalizer** (describe the band adjustments), or **Compressor** (specify Multiband/OTT mode if used).]
-- Slot 2: [Choose an effect. Common choices for movement and width are **Hyper/Dimension** (specify Mix and Size), **Chorus** (specify Rate/Depth), **Phaser**, or **Flanger**.]
-- Slot 3: [Choose an effect for space. **Reverb** (specify Type, Size, and Mix) or **Delay** (specify Rate, Feedback, and Mix) are standard.]
-- Slot 4: [Choose a final effect for polish or character. This could be another **Compressor**, an **EQ**, a **Filter** sweep, or the **Convolve** effect for unique impulse responses.]
+- **Task:** Create a professional, genre-appropriate FX chain using **ONLY the effects listed in the Serum FX Knowledge Base**. Do not use noise samples here. You **MUST use at least 2 FX slots**, but use up to 4 if it serves the sound.
+- **For each slot used, you MUST be specific** about the effect name and its key parameters as described in the knowledge base.
+- Slot 1: [Effect Name: Type/Mode, Key Parameter 1, Key Parameter 2...]
+- Slot 2: [Effect Name: Type/Mode, Key Parameter 1, Key Parameter 2...]
+- (Slot 3): [Optional, if needed for the sound]
+- (Slot 4): [Optional, if needed for the sound]
 
 ### MACRO CONTROLS
-- Macro 1 Name: [Invent a useful, descriptive name, e.g., "Filter Cutoff", "Timbre", "FX Wet"]
-- Macro 1 -> Destination 1: [Assign to the most important parameter, e.g., Filter Cutoff.]
-- Macro 1 -> Range 1: [Set a musically useful range. AVOID sweeping the entire parameter range if it's not musical.]
-- Macro 2 Name: [e.g., "Reverb Mix"]
-- Macro 2 -> Destination 1: [e.g., Reverb Wet/Dry]
-- Macro 2 -> Range 1: [e.g., 0% -> 50%]
+- **Task:** Define useful macros to make the preset expressive. You **MUST define at least 2 macros**. For complex sounds, defining 3 or 4 is highly encouraged.
+- **For each macro, you MUST be specific** about its Name, its primary Destination, and a musically useful modulation Range.
+- Macro 1 Name:
+- Macro 1 -> Destination 1:
+- Macro 1 -> Range 1:
+- Macro 2 Name:
+- Macro 2 -> Destination 1:
+- Macro 2 -> Range 1:
+- (Macro 3 Name): [Optional, if needed for the sound]
+- (Macro 3 -> Destination 1):
+- (Macro 3 -> Range 1):
+- (Macro 4 Name): [Optional, if needed for the sound]
+- (Macro 4 -> Destination 1):
+- (Macro 4 -> Range 1):
 `;
         };
 
@@ -496,11 +583,13 @@ Provide the detailed settings below, starting with a unique, evocative name for 
                 if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
                     let fullText = result.candidates[0].content.parts[0].text;
                     
-                    const validateAndCorrect = (text, presetType) => {
+                    const validateAndCorrect = (text) => {
                         const lines = text.split('\n');
                         let inNoiseSection = false;
                         const correctedLines = lines.map(line => {
-                            if (line.trim().startsWith('###')) inNoiseSection = line.includes('NOISE OSCILLATOR');
+                            if(line.trim().startsWith("### NOISE OSCILLATOR")) inNoiseSection = true;
+                            if(line.trim().startsWith("### FILTER")) inNoiseSection = false;
+
                             if (line.trim().startsWith('- Wavetable:')) {
                                 const [key, ...valueParts] = line.split(':');
                                 let value = valueParts.join(':').trim();
@@ -508,21 +597,21 @@ Provide the detailed settings below, starting with a unique, evocative name for 
                                 if (!allValidWavetables.includes(value)) return `${key}: ${allValidWavetables[Math.floor(Math.random() * allValidWavetables.length)]}`;
                                 return `${key}: ${value}`;
                             }
-                            if (inNoiseSection && line.trim().startsWith('- Type:') && acousticTypes.includes(presetType)) {
+                            if (inNoiseSection && line.trim().startsWith('- Type:')) { // This targets the Noise OSC Type
                                 const [key, ...valueParts] = line.split(':');
-                                const value = valueParts.join(':').trim();
-                                const validSamplesForType = serumSamples[presetType];
-                                if (validSamplesForType && !validSamplesForType.includes(value)) {
-                                    const randomValidSample = validSamplesForType[Math.floor(Math.random() * validSamplesForType.length)];
-                                    return `${key}: ${randomValidSample}`;
+                                let value = valueParts.join(':').trim();
+                                if (!allValidNoises.includes(value)) {
+                                    const randomNoise = allValidNoises[Math.floor(Math.random() * allValidNoises.length)];
+                                    return `${key}: ${randomNoise}`;
                                 }
+                                return `${key}: ${value}`;
                             }
                             return line;
                         });
                         return correctedLines.join('\n');
                     };
 
-                    const correctedText = validateAndCorrect(fullText, state.selections.type);
+                    const correctedText = validateAndCorrect(fullText);
                     const nameMatch = correctedText.match(/### PRESET NAME\s*\n-\s*Name:\s*(.*)/i);
                     state.presetTitle = nameMatch ? nameMatch[1].trim() : `A ${state.selections.mood} ${state.selections.genre} ${state.selections.type}`;
                     state.preset = correctedText;
@@ -570,8 +659,24 @@ Provide the detailed settings below, starting with a unique, evocative name for 
             moodSelect.addEventListener('change', (e) => {
                 state.selections.mood = e.target.value;
                 const [start, end] = moodThemes[state.selections.mood] || moodThemes['Default'];
-                document.documentElement.style.setProperty('--bg-start', start);
-                document.documentElement.style.setProperty('--bg-end', end);
+                
+                const rootStyle = document.documentElement.style;
+                
+                if (state.activeGradientSet === 'a') {
+                    // Current is A, fade to B
+                    rootStyle.setProperty('--bg-start-b', start);
+                    rootStyle.setProperty('--bg-end-b', end);
+                    rootStyle.setProperty('--opacity-a', '0');
+                    rootStyle.setProperty('--opacity-b', '1');
+                    state.activeGradientSet = 'b';
+                } else {
+                    // Current is B, fade to A
+                    rootStyle.setProperty('--bg-start-a', start);
+                    rootStyle.setProperty('--bg-end-a', end);
+                    rootStyle.setProperty('--opacity-b', '0');
+                    rootStyle.setProperty('--opacity-a', '1');
+                    state.activeGradientSet = 'a';
+                }
             });
             inspiredByInput.addEventListener('input', (e) => state.selections.inspiredBy = e.target.value);
             generateButton.addEventListener('click', generatePreset);
@@ -582,3 +687,4 @@ Provide the detailed settings below, starting with a unique, evocative name for 
     </script>
 </body>
 </html>
+�
