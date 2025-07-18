@@ -522,20 +522,44 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Description: [Describe the character and ideal use for this sound in 1-2 sentences, keeping the genre in mind]
 
 ### OSC A
+- **Task:** Define all parameters for Oscillator A.
 - Wavetable: [Choose a wavetable that is highly appropriate for the genre]
+- Octave: [-2 to +2]
+- Semitone: [-12 to +12]
+- Fine Tune: [-100 to +100 cents]
+- Coarse Pitch: [Set a value if needed for drastic pitch changes]
+- Wavetable Position: [Set a starting position, e.g., 1-256]
 - Unison: [Set a professional value. e.g., 1 for subs, 2-5 for most sounds, 7+ for supersaws]
 - Detune: [Use subtle detuning for warmth, or higher values for wide supersaws]
-- Warp Mode: [Choose a mode that adds character, e.g., Bend, FM, Sync. Specify the amount.]
+- Blend: [Adjust unison voice blending, e.g., 'Linear']
+- Pan: [Set a stereo position, e.g., C, L50, R50]
+- Level: [Set the oscillator's volume percentage]
+- Warp Mode 1: [Choose a mode: Off, Sync, Bend+, Bend-, Bend+/-, PWM, Asym+, Asym-, Asym+/-, FM (from Sub/Noise/B), etc. Specify amount.]
+- Warp Mode 2: [(Optional) Choose a second mode if needed to create a complex timbre.]
 
 ### OSC B
+- **Task:** Define all parameters for Oscillator B.
 - Wavetable: [Choose a wavetable that complements OSC A.]
+- Octave: [-2 to +2]
+- Semitone: [-12 to +12]
+- Fine Tune: [-100 to +100 cents]
+- Coarse Pitch: [Set a value if needed for drastic pitch changes]
+- Wavetable Position: [Set a starting position, e.g., 1-256]
 - Unison: [If layering, consider using fewer unison voices than OSC A.]
 - Detune: [Subtle detuning against OSC A can create rich texture.]
+- Blend: [Adjust unison voice blending.]
+- Pan: [Set a stereo position.]
 - Level: [Adjust to blend well with OSC A. Does not always need to be at 100%.]
+- Warp Mode 1: [Choose a mode to complement OSC A.]
+- Warp Mode 2: [(Optional) Choose a second mode if needed.]
 
 ### SUB OSCILLATOR
-- Waveform: [Typically Sine for clean low-end, or Triangle for more harmonics.]
-- Level: [Crucial for the low-end foundation. Set appropriately for the sound type.]
+- **Task:** Decide if a sub is needed. If so, define its parameters.
+- Enabled: [Yes/No. Use 'No' for high-frequency sounds like some leads or FX.]
+- Waveform: [Sine, Triangle, Sawtooth, Square]
+- Octave: [-1 or -2]
+- Level: [Set a musically useful level.]
+- Direct Out: [Yes/No. 'Yes' bypasses Filter/FX, good for clean low-end.]
 
 ### NOISE OSCILLATOR
 - Type: [Refer to the **Serum Noise Knowledge Base**. If the sound type is acoustic (e.g., 'Brass'), you MUST choose a sample that matches that specific instrument type from the 'Acoustic' category (e.g., 'Acoustic > Horn Stab Emin'). Format it as "Category > SampleName".]
@@ -758,5 +782,3 @@ ${type === 'Arp' ? `
     </script>
 </body>
 </html>
-
-
