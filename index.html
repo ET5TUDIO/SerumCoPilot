@@ -462,6 +462,16 @@
                 - **Flanges/Misc:** Comb P, Comb M, Flg P, Flg M, Allpass, Reverb, Scream LP, Dist.Comb.
             `;
 
+            const serumArpKnowledge = `
+                **Serum Arpeggiator Knowledge Base:**
+                - The Arpeggiator is enabled in the VOICING section.
+                - **Mode:** Up, Down, UpDown, DownUp, Random, As Played (Chord).
+                - **Rate:** Tempo-synced values like 1/4, 1/8, 1/16, 1/32, including Triplet (T) and Dotted (D) variations.
+                - **Octave Range:** Typically 1 to 4. Determines how many octaves the pattern repeats over.
+                - **Gate:** Percentage (e.g., 80%) that controls the length of each arp note.
+                - **Swing:** Percentage (e.g., 60%) that adds a shuffle/groove feel.
+            `;
+
             const genreSpecifics = genreKnowledge[fullGenre] || genreKnowledge[genre] || 'No specific principles loaded. Rely on general professional knowledge.';
 
             const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -483,6 +493,7 @@ ${genreSpecifics}
 ${serumFxKnowledge}
 ${serumNoiseKnowledge}
 ${serumFilterKnowledge}
+${serumArpKnowledge}
 
 **Instructions:**
 Provide the detailed settings below, starting with a unique, evocative name for the preset and a brief description. Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic, professional values based on the principles above. For wavetables, use the format "Category > WavetableName".
@@ -519,6 +530,16 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Cutoff: [Set a musically useful starting point.]
 - Resonance: [Use sparingly for character.]
 - Drive: [Add subtle warmth and saturation.]
+
+${type === 'Arp' ? `
+### ARPEGGIATOR
+- **Task:** Define the settings for the arpeggiator using the **Serum Arpeggiator Knowledge Base**.
+- Mode: [Choose a mode, e.g., Up, UpDown, Random]
+- Rate: [Choose a tempo-synced rate, e.g., 1/16, 1/8T]
+- Octave Range: [Set a range, e.g., 1, 2]
+- Gate: [Set a percentage for note length, e.g., 85%]
+- Swing: [Set a percentage for shuffle, e.g., 55%]
+` : ''}
 
 ### ENV 1 (AMP)
 - Attack: [Set a realistic value. e.g., ~0ms for basses/plucks, 50ms+ for pads.]
