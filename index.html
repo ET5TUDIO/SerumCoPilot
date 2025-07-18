@@ -205,7 +205,7 @@
             const genre = genres.find(g => g.name === genreName);
             if (genre && genre.subgenres) {
                 const subgenreHTML = `
-                    <div class="text-center mb-3 text-gray-400 animate-fade-in">Select a Sub-Genre</div>
+                    <div class="text-center mb-3 text-gray-400 animate-fade-in">Sub-Genre (Optional)</div>
                     <div class="flex flex-wrap justify-center gap-3 animate-fade-in">
                         ${genre.subgenres.map(sg => `
                             <button data-subgenre="${sg}" class="subgenre-button text-gray-300 font-semibold py-2 px-4 rounded-full transition-colors duration-200 hover:bg-gray-700/70 hover:border-gray-500">
@@ -246,7 +246,7 @@
                         return `<li class="text-gray-300 text-sm p-2 rounded-md"><span><strong class="font-semibold text-gray-200">${key}:</strong> ${valueParts.join(':').trim()}</span></li>`;
                     }).join('');
 
-                    return `<div class="glass-card mb-4 animate-fade-in-up" style="animation-delay: ${index * 50}ms"><button class="accordion-toggle w-full flex justify-between items-center p-4 text-left"><h3 class="text-lg font-bold text-blue-300">${title}</h3><svg class="w-6 h-6 text-gray-400 transform transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button><div class="accordion-content px-4 pb-4"><ul class="space-y-2 border-t border-gray-700/50 pt-3">${listItems}</ul></div></div>`;
+                    return `<div class="glass-card mb-4 animate-fade-in-up" style="animation-delay: ${index * 50}ms"><button class="accordion-toggle w-full flex justify-between items-center p-4 text-left"><h3 class="text-lg font-bold text-blue-300">${title}</h3><svg class="w-6 h-6 text-gray-400 transform transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd" /></svg></button><div class="accordion-content px-4 pb-4"><ul class="space-y-2 border-t border-gray-700/50 pt-3">${listItems}</ul></div></div>`;
                 }).join('');
 
                 resultsSection.innerHTML = `<div class="animate-fade-in"><h2 class="text-2xl font-bold text-center mb-6 text-white"><span class="text-blue-400">${state.presetTitle}</span></h2>${presetHTML}</div>`;
@@ -262,10 +262,8 @@
             if (!button) return;
             
             const genreName = button.dataset.genre;
-            const genreHasSubgenres = genres.find(g => g.name === genreName)?.subgenres;
-
             state.selections.genre = genreName;
-            state.selections.subgenre = null; // Reset subgenre on new genre click
+            state.selections.subgenre = null;
 
             document.querySelectorAll('#genre-grid button').forEach(btn => {
                 const container = btn.children[0];
@@ -289,12 +287,7 @@
             });
             
             renderSubgenres(genreName);
-            
-            if (!genreHasSubgenres) {
-                generateButton.disabled = false;
-            } else {
-                generateButton.disabled = true; // Disable until a subgenre is chosen
-            }
+            generateButton.disabled = false;
         }
         
         function handleSubgenreSelect(e) {
@@ -302,25 +295,45 @@
             if(!button) return;
 
             const subgenreName = button.dataset.subgenre;
-            state.selections.subgenre = subgenreName;
-
-            document.querySelectorAll('#subgenre-container button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            button.classList.add('selected');
-            generateButton.disabled = false;
+            
+            if (button.classList.contains('selected')) {
+                button.classList.remove('selected');
+                state.selections.subgenre = null;
+            } else {
+                document.querySelectorAll('#subgenre-container button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                button.classList.add('selected');
+                state.selections.subgenre = subgenreName;
+            }
         }
 
         function attachAccordionListeners() {
             document.querySelectorAll('.accordion-toggle').forEach(button => {
+                // Set initial state for new content
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('svg');
+                if (content.style.maxHeight) {
+                    // This accordion is already open, do nothing
+                } else {
+                     icon.style.transform = '';
+                }
+
                 button.onclick = () => {
                     const content = button.nextElementSibling;
                     const icon = button.querySelector('svg');
-                    icon.classList.toggle('rotate-180');
+                    
                     if (content.style.maxHeight) {
                         content.style.maxHeight = null;
+                        icon.style.transform = '';
                     } else {
+                        // Close all other accordions
+                        document.querySelectorAll('.accordion-content').forEach(acc => {
+                            acc.style.maxHeight = null;
+                            acc.previousElementSibling.querySelector('svg').style.transform = '';
+                        });
                         content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(180deg)';
                     }
                 };
             });
@@ -329,60 +342,130 @@
         // --- API & LOGIC ---
         const getCreativePrompt = (selections) => {
             const { genre, subgenre, type, mood, inspiredBy } = selections;
-            const fullGenre = subgenre ? `${subgenre} (${genre})` : genre;
+            const fullGenre = subgenre ? `${subgenre}` : genre;
+
+            const genreKnowledge = {
+                'Tech House': `Timbres: Focus on tight, punchy sounds. Use basic analog shapes (squares, saws) or simple digital tables. FM synthesis is common for percussive bass sounds. Envelopes: Very short decay, zero sustain (plucks). Filter: Low-pass filters (MG Low 24) with short decay envelopes are key. AVOID: Long releases, complex evolving pads.`,
+                'Deep House': `Timbres: Smooth, warm sounds. Analog wavetables like Juno and Basic Mini are excellent. Electric piano samples in the Noise OSC work well. Envelopes: Slightly longer releases than Tech House for pads and keys. Filter: Gentle low-pass filtering (MG Low 12 or 18) to create a warm, submerged feel. AVOID: Harsh distortion, aggressive wavetables.`,
+                'Progressive House': `Timbres: Supersaw leads (use high unison on saw waves), lush pads, and arpeggiated plucks. Analog wavetables are key. Envelopes: Long attack and release for pads, short plucky envelopes for arps/basses. Filter: Sweeping low-pass filters (24dB) are a staple of the genre. AVOID: Dry, sterile sounds.`,
+                'Afro House': `Timbres: Organic and acoustic sounds. Use Noise OSC with percussive samples. Plucks can be made from digital or analog tables. Mallet/bell-like sounds are common. Envelopes: Short and percussive for most elements. Filter: Used to shape sounds, often with a bit of resonance to add character. AVOID: Overly synthetic or aggressive textures.`,
+                'Future House': `Timbres: Metallic, bouncy basslines are key, often made with FM synthesis from basic shapes. Bright, plucky leads. Envelopes: Very tight, short envelopes for basses and leads. Filter: Low-pass filters with envelope modulation to create the characteristic 'wobble' or pluck. AVOID: 'Dirty' or 'gritty' distortion.`,
+                'Melodic Techno': `Timbres: Rich, evolving arps and pads. Analog-style wavetables (Juno, SawRounded) and some digital textures. Supersaws are common. Envelopes: Long, evolving envelopes for pads and leads. Short, snappy envelopes for arps. Filter: Slow, sweeping low-pass filters create tension and release. Consider Acid or German LP filters. AVOID: Abrasive high-end, overly complex rhythms.`,
+                'Hard Techno': `Timbres: Highly distorted and aggressive sounds. Digital and spectral wavetables with distortion are common. Noise oscillator for industrial texture. Filter: Use aggressive filters like Scream LP, Dist.Comb, or highly resonant standard filters. AVOID: 'Pretty' or melodic elements.`,
+                'Minimal Techno': `Timbres: Focus on simple, clean tones. Sine waves, triangles, and basic digital tables. Percussive clicks and blips from the Noise OSC. Filter: Band-pass and high-pass filters are used frequently to thin out sounds and create rhythmic interplay. AVOID: Lush pads, complex melodies, heavy layering.`,
+                'Industrial Techno': `Timbres: Metallic, noisy, and dissonant. Use spectral and digital wavetables, especially ones that sound like machines or noise. Remap modes can be powerful here. Filter: Comb filters, Ring Mod, and resonant high-pass filters to create harsh textures. AVOID: Conventional musical harmony, smooth sounds.`,
+                'Uplifting Trance': `Timbres: The supersaw lead is king. Use 7+ unison voices on a saw wave, detuned significantly. Plucks are often simple saw/square waves. Pads are lush and analog-sounding. Filter: Wide open low-pass filters on leads. Sweeping filters for transitions. MG Low 24 is a classic choice. AVOID: Under-saturated or dry sounds.`,
+                'Psytrance': `Timbres: Complex, futuristic sounds. FM, phase modulation, and spectral wavetables are heavily used. Leads are often sharp and acidic. Basses are rolling and typically off-beat. Filter: Band-pass and formant filters with fast LFO modulation are key to the psychedelic sound. Phs and Flg filters are excellent. AVOID: Simple, static sounds.`,
+                'Progressive Trance': `Timbres: A blend of Progressive House and Trance. Deeper, warmer sounds than Uplifting Trance. Less reliance on the main supersaw lead, more on plucks and atmospheric pads. Filter: More subtle filter work, focusing on gradual evolution. MG Low 18 or 24 are good choices. AVOID: Overly aggressive or fast-paced elements.`,
+                'Vocal Trance': `Timbres: The focus is on supporting a vocalist. Pads must be lush and warm, leads should be melodic but not overpowering. Use classic analog wavetables. Filter: Used to gently shape sounds and ensure they don't clash with the vocal frequency range. AVOID: Sounds that are too busy or aggressive.`,
+                'Riddim': `Timbres: Simple wavetables (often sine/triangle) subjected to extreme processing. The sound comes from the FX and modulation, not the source. Filter: Comb filters and All-Pass filters (phaser) modulated by a square LFO create the characteristic sound. AVOID: Complex melodic ideas, sustained sounds.`,
+                'Melodic Dubstep': `Timbres: Similar to Future Bass. Big, emotional supersaw chords and leads. Lush, atmospheric pads. Sub-bass is crucial. Filter: Used to create powerful sweeps leading into drops. Classic MG Low 24 is perfect. AVOID: Atonal or overly aggressive bass design.`,
+                'Tearout': `Timbres: Extremely aggressive, metallic, and noisy. Spectral wavetables (e.g., Scream, Growl) and heavy FM synthesis. Dissonance is key. Filter: Used as a sound design tool with heavy resonance and fast modulation to create screeching sounds. Scream LP/BP and Dist.Comb filters are ideal. AVOID: Subtlety, traditional harmony.`,
+                'Future Riddim': `Timbres: A fusion of melodic and heavy elements. Often uses colorful, bell-like or chordal sounds as the basis for the rhythmic chopping. Digital wavetables are common. Filter: Formant and comb filters to add vocal-like character. A mix of clean and aggressive filters. AVOID: Simple on/off patterns.`,
+                'Future Bass': `Timbres: Bright, detuned supersaw chords are a staple. Sine or triangle wave sub-bass. Pitched vocal chops in the Noise OSC. Arps are common. Filter: Low-pass filter on chords, modulated by an LFO synced to the track's sidechain. AVOID: Aggressive distortion.`,
+                'Lo-fi': `Timbres: Imperfection is key. Use analog wavetables with slight pitch drift (via LFO). Use Noise OSC with vinyl crackle or tape hiss samples. Electric piano samples are great. Filter: Low-pass filter (Low 6 or 12) to roll off high frequencies is essential for the 'underwater' sound. AVOID: Clean, bright, digital sounds.`,
+                'Hardwave': `Timbres: A sub-genre of Trap. Ethereal, atmospheric pads and leads, often using detuned supersaws, layered with hard-hitting Trap drums. Reese basses are very common. Filter: Gentle, sweeping filters (MG Low 18/24) to add movement. AVOID: Dry, simple sounds.`,
+                'Hybrid Trap': `Timbres: A mix of Trap and Dubstep. Expect aggressive, growling basses (like Dubstep) paired with Trap drum patterns and 808s. Filter: Used for both aggressive bass modulation (e.g., Scream filters) and melodic sweeps. AVOID: Sticking to just one genre's conventions.`,
+                'Cloud Rap': `Timbres: Dreamy, hazy, and atmospheric. Use pads with long attack/release. Simple, clean wavetables like sines and triangles, washed in effects. Filter: Heavy low-pass filtering to create a muffled, distant feel. AVOID: Sharp, punchy, or aggressive sounds.`,
+                'UK Drill': `Timbres: Dark and ominous sounds are key. Simple wavetables (saws, squares) for basses. Pads should be eerie. Sliding 808-style sub-basses are central. Filter: Low-pass filters to keep sounds dark and moody. AVOID: Bright, happy sounds; complex melodies.`,
+                'NY Drill': `Timbres: Often more sample-based and gritty than UK Drill. Noisy, distorted basses. Still features sliding 808s. Filter: Used to add grit and character, sometimes with a bit of drive. AVOID: Clean, polished sounds.`,
+                'Jersey Drill': `Timbres: More upbeat and dance-oriented. Features bouncy, energetic basslines, often using a "kick" sample in the Noise OSC layered with a sub. Filter: Used to make sounds tight and focused. AVOID: Long, sustained sounds.`,
+                'Drift Phonk': `Timbres: Heavily distorted and saturated basslines with a prominent cowbell melody. The bass often uses saw waves with heavy distortion. Filter: Often used to add resonance and grit to the bass. AVOID: Clean sounds, complex melodies beyond the cowbell.`,
+                'Synthwave': `Timbres: Nostalgic 80s sounds. Analog wavetables are essential (Juno, Jupiter, Saw, Square). Brass stabs, plucky basses, and warm pads. Filter: Low-pass filters with a bit of resonance are key to the vintage sound. MG Low 12 or 18 are perfect. AVOID: Modern, digital, or aggressive wavetables.`,
+                'Darksynth': `Timbres: A darker, more aggressive take on Synthwave. Uses more distortion and sometimes more complex, digital wavetables alongside the classic analog ones. Filter: Used more aggressively, with more resonance. Consider the German LP or Acid Ladder filters. AVOID: Overly bright or happy sounds.`,
+                'Neurofunk': `Timbres: The genre is defined by complex, technically intricate basslines ('reese' basses and 'growls'). Heavy use of FM, AM, and Ring Modulation. Spectral and Digital wavetables are essential. Filter: This is critical. Comb filters, Allpasses, Phasers, and Band-pass filters are modulated at high speed to create the talking, robotic bass sounds. AVOID: Simple, static bass sounds.`,
+                'Liquid D&B': `Timbres: Smooth, soulful, and melodic. Deep, rolling sub-basses (often just a simple sine wave). Rhodes-style keys, lush pads, and gentle leads. Filter: Gentle low-pass filtering (MG Low 12 or 18) to keep sounds warm and deep. AVOID: Aggressive or distorted sounds.`,
+                'Jump-Up': `Timbres: Simple, energetic, and often goofy bass sounds. The classic sound is a 'wobble' bass made with a simple wavetable and an LFO modulating the filter cutoff. Filter: A low-pass filter (MG Low 24) modulated by a sine or triangle LFO is the core of the sound. AVOID: Complex, evolving sounds.`,
+                'Pop': `Timbres: Clean, bright, and polished. Modern pop uses a wide range of sounds, but they are always high-quality. Simple analog shapes, clean digital tables, and sampled instruments are all common. Filter: Used to ensure sounds fit perfectly in a dense mix. High-pass filtering to remove unnecessary low-end is crucial. AVOID: Overly experimental or lo-fi sounds (unless that's the specific sub-genre).`,
+                'R&B': `Timbres: Smooth, lush, and modern. Warm pads, deep basses (often sine/triangle based), and soft, breathy leads. Electric piano sounds are a staple. Filter: Gentle low-pass filtering to maintain a warm, intimate vibe. AVOID: Harsh or aggressive sounds.`,
+                'Soul': `Timbres: Rooted in classic analog sounds. Warm basses, organ-like keys, and brass sounds. Use analog wavetables or acoustic samples. Filter: Used to emulate the warm character of vintage equipment. The French LP or German LP can be great here. AVOID: Overly digital or modern-sounding textures.`,
+                'Indie': `Timbres: Often characterized by a slightly 'lo-fi' or 'garage' aesthetic. Detuned analog wavetables, slightly distorted guitars (use noise osc samples), and unique, quirky sounds. Filter: Used to create character, not for clean sweeps. A little resonance can add a nice edge. AVOID: Overly polished, perfect-sounding presets (unless making Indie Pop).`,
+                'Folk': `Timbres: Acoustic and natural sounds are paramount. Use the acoustic samples in the Noise OSC as the primary sound source. Layer with simple analog waves for warmth. Filter: Used mainly for EQing - cutting low-end mud or harsh highs with Low EQ or High EQ filters. AVOID: Obvious synthesis, heavy modulation, synthetic effects.`,
+                'Cinematic': `Timbres: Large, epic, and evolving. Orchestral samples (strings, brass) are key. Layer them with massive synth pads (supersaws, complex digital tables). Filter: Slow, epic filter sweeps are a staple. AVOID: Small, dry, or simple sounds.`,
+                'Ambient': `Timbres: Texture and atmosphere are everything. Use any wavetable, but process it heavily. Evolving pads, granular textures (use Noise OSC with unusual samples), and gentle drones. Filter: Very slow LFO modulation on the filter cutoff to create constant, subtle movement. The Reverb filter can be a powerful tool here. AVOID: Short, percussive sounds; anything that feels rushed.`,
+                'Hyperpop': `Timbres: Extreme, chaotic, and digital. Aggressive digital wavetables, heavy FM, and bit-crushed sounds. Supersaws are pitched up and heavily processed. Filter: Used for aggressive, fast modulation. Formant and comb filters are common. The Scream LP is a great choice. AVOID: Natural, subtle, or clean sounds.`,
+            };
+            
+            const genreSpecifics = genreKnowledge[fullGenre] || genreKnowledge[genre] || 'No specific principles loaded. Rely on general professional knowledge.';
 
             const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
             const character = `${mood}, ${getRandom(['analog', 'digital', 'warm', 'bright', 'gritty', 'glassy', 'metallic', 'wooden', 'breathy'])}, and ${getRandom(['punchy', 'driving', 'relaxed', 'plucky', 'sustained', 'evolving', 'chaotic', 'rhythmic'])}`;
-            const seed = getRandom(["The core rhythmic element must come from LFO 2, set to a complex custom shape in 'Envelope' mode, modulating the filter cutoff and oscillator pitch.", "The FX rack MUST use a Phaser or Flanger BEFORE the main distortion and reverb to create a unique texture.", "Macro 1 MUST seamlessly transform the sound from a short, dry pluck into a vast, washed-out ambient pad by controlling Reverb Mix, ENV 1 Release, and Filter Cutoff.", "The sound must heavily feature the 'Bend+' warp mode on OSC A, modulated by a very fast, chaotic LFO.", "The filter's Drive should be modulated by its own Envelope (ENV 2), creating a sound that gets dirtier on the attack."]);
-
-            let specialInstructions = '';
-            if (acousticTypes.includes(type)) {
-                const sampleCategory = serumSamples[type] ? type : 'Strings';
-                const availableSamples = serumSamples[sampleCategory].join(', ');
-                specialInstructions = `\n**SPECIAL INSTRUCTION FOR ACOUSTIC PRESET:**\n- The core of this sound MUST come from the **Noise Oscillator**.\n- Load a sample into the Noise Oscillator. Choose one from: **[${availableSamples}]**.\n- **Crucially, you MUST enable Key Tracking and set Pitch to 100 on the Noise Oscillator** to make the sample playable.\n- The main oscillators (OSC A, B) should be used subtly for texture.`;
-            }
             
             let inspirationInstruction = (inspiredBy && inspiredBy.trim() !== '') ? `\n**Inspiration:** The user wants a sound inspired by: "${inspiredBy}". This is a strong creative guide; try to capture its essence.` : '';
 
-            return `You are a world-class sound designer using Xfer Records Serum 2. Your task is to create a highly detailed, creative, and genre-authentic preset. Your highest priority is creativity and uniqueness, guided by the user's request.
-The user wants a preset for the **${fullGenre}** genre. The sound type must be: **a ${type}**. Its primary character and mood must be: **${character}**.${inspirationInstruction}
-**Creative Seed / Constraint:** To ensure uniqueness, you must incorporate the following creative constraint: ${seed}
-${specialInstructions}
-Provide the detailed settings below, starting with a unique name for the preset.
-**IMPORTANT:** Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic values. For wavetables, use the format "Category > WavetableName".
+            return `You are a world-class sound designer using Xfer Records Serum 2. Your task is to create a highly detailed, creative, and professionally-authentic preset. Your highest priority is accuracy to the requested genre and professional quality.
+
+**Primary Goal:**
+- Genre: **${fullGenre}**
+- Sound Type: **${type}**
+- Character: **${character}**
+${inspirationInstruction}
+
+**Sound Design Principles for ${fullGenre}:**
+${genreSpecifics}
+
+**Instructions:**
+Provide the detailed settings below, starting with a unique, evocative name for the preset and a brief description. Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic, professional values based on the principles above. For wavetables, use the format "Category > WavetableName".
 
 ### PRESET NAME
-- Name: [Create a unique, evocative name for this specific preset]
+- Name: [Create a unique, evocative name for this specific preset that fits the genre and character]
+
 ### PRESET DESCRIPTION
-- Description: [Describe the character and ideal use for this sound in 1-2 sentences.]
+- Description: [Describe the character and ideal use for this sound in 1-2 sentences, keeping the genre in mind]
+
 ### OSC A
-- Wavetable: [e.g., Analog > Sawtooth]
+- Wavetable: [Choose a wavetable that is highly appropriate for the genre, e.g., Analog > Juno for Synthwave, Spectral > Growl-1 for Dubstep]
+- Unison: [Set a professional value. e.g., 1 for sub basses, 2-5 for most sounds, 7+ for Trance supersaws]
+- Detune: [Use subtle detuning for warmth, or higher values for wide supersaws. AVOID extreme, unusable detuning.]
+- Warp Mode: [Choose a mode that adds character, e.g., Bend, FM, Sync. Specify the amount.]
+
 ### OSC B
-- Wavetable: [e.g., Analog > Juno]
+- Wavetable: [Choose a wavetable that complements OSC A.]
+- Unison: [If layering, consider using fewer unison voices than OSC A.]
+- Detune: [Subtle detuning against OSC A can create rich texture.]
+- Level: [Adjust to blend well with OSC A. Does not always need to be at 100%.]
+
 ### SUB OSCILLATOR
-- Waveform: [e.g., Sine]
+- Waveform: [Typically Sine for clean low-end, or Triangle for slightly more harmonics. AVOID Square unless for specific aggressive sounds.]
+- Level: [Crucial for the low-end foundation. Set appropriately for the sound type. For a sub-bass, this might be the main sound source.]
+
 ### NOISE OSCILLATOR
-- Type: [For acoustic types, use a sample like 'Piano_F3'. For others, e.g., 'Analog > J106 HPF']
-- Keytrack: [On/Off]
-- Pitch: [Value]
+- Type: [Choose a noise type for texture (e.g., Bright White) or a genre-specific sample (e.g., vinyl crackle for Lo-fi, acoustic sample for Folk).]
+- Pitch: [Adjust if using a tonal sample.]
+- Level: [Use subtly to add texture and character without overpowering the sound.]
+
 ### FILTER
-- Type: [e.g., MG Low 24]
-### LFO 1
-- Shape: [e.g., Triangle]
+- Type: [Choose a professional and genre-appropriate filter type from the full list (Normal, Multi, Flanges, Misc, S2). **Do NOT default to MG Low 24 unless it is the best professional choice for the genre.** For example, use a Comb or Phs filter for Neurofunk, or a German LP for Techno.]
+- Cutoff: [Set a musically useful starting point. AVOID leaving it wide open at 20kHz unless intentional.]
+- Resonance: [Use sparingly for character. AVOID high values that create unpleasant whistling, unless it's a core part of the sound (e.g., Acid).]
+- Drive: [Add subtle warmth and saturation. High values can be used for aggressive sounds.]
+
 ### ENV 1 (AMP)
-- Attack: [ms]
-### VOICING
-- Mode: [Mono or Poly]
+- Attack: [Set a realistic value. e.g., ~0ms for basses/plucks, 50ms+ for pads.]
+- Decay: [Adjust for the sound's length.]
+- Sustain: [0 for plucks/percussion. -inf dB is 0. High for pads/leads.]
+- Release: [Set a musically useful value. e.g., 100-400ms for plucks, 1s+ for pads.]
+
+### LFO 1
+- Shape: [Choose a useful shape, e.g., Triangle for vibrato, Sine for gentle filter movement.]
+- Rate: [Set a musically useful speed, often synced to tempo (e.g., 1/4, 1/8).]
+- Destination: [Assign to a useful parameter like Fine Pitch for vibrato, or Filter Cutoff.]
+- Mod Depth: [Apply subtle modulation. AVOID extreme, unmusical depth.]
+
 ### FX RACK
-- Slot 1: [Effect Type]
-- Slot 2: [Effect Type]
-- Slot 3: [Effect Type]
+- The available FX modules are: Bode, Chorus, Compressor, Convolve, Delay, Distortion, Equalizer, Filter, Flanger, Hyper/Dimension, Phaser, Reverb, Splitter L/H, Splitter L/M/H, Splitter M/S, Utility. Choose up to 4 effects in a logical order.
+- Slot 1: [Choose an effect and specify its key parameters. Common starting points are **Distortion** (specify Type and Drive), **Equalizer** (describe the band adjustments), or **Compressor** (specify Multiband/OTT mode if used).]
+- Slot 2: [Choose an effect. Common choices for movement and width are **Hyper/Dimension** (specify Mix and Size), **Chorus** (specify Rate/Depth), **Phaser**, or **Flanger**.]
+- Slot 3: [Choose an effect for space. **Reverb** (specify Type, Size, and Mix) or **Delay** (specify Rate, Feedback, and Mix) are standard.]
+- Slot 4: [Choose a final effect for polish or character. This could be another **Compressor**, an **EQ**, a **Filter** sweep, or the **Convolve** effect for unique impulse responses.]
+
 ### MACRO CONTROLS
-- Macro 1 Name: [Invent a creative name, e.g., "Grit", "Shimmer", "Warp"]
-- Macro 1 -> Destination 1: [Parameter Name, e.g., Filter Cutoff]
-- Macro 1 -> Range 1: [Modulation range, e.g., 20% -> 85%]
-- Macro 1 -> Destination 2: [Parameter Name, e.g., OSC A WT-Pos]
-- Macro 1 -> Range 2: [Modulation range, e.g., 0 -> 128]
+- Macro 1 Name: [Invent a useful, descriptive name, e.g., "Filter Cutoff", "Timbre", "FX Wet"]
+- Macro 1 -> Destination 1: [Assign to the most important parameter, e.g., Filter Cutoff.]
+- Macro 1 -> Range 1: [Set a musically useful range. AVOID sweeping the entire parameter range if it's not musical.]
+- Macro 2 Name: [e.g., "Reverb Mix"]
+- Macro 2 -> Destination 1: [e.g., Reverb Wet/Dry]
+- Macro 2 -> Range 1: [e.g., 0% -> 50%]
 `;
         };
 
@@ -403,7 +486,7 @@ Provide the detailed settings below, starting with a unique name for the preset.
             try {
                 const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyB6FOCL3qtHz2dlaNvlPHM8jQh-g16L_L0"; // API key management
+                const apiKey = "AIzaSyB6FOCL3qtHz2dlaNvlPHM8jQh-g16L_L0"; // API key will be proxied
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
@@ -428,9 +511,11 @@ Provide the detailed settings below, starting with a unique name for the preset.
                             if (inNoiseSection && line.trim().startsWith('- Type:') && acousticTypes.includes(presetType)) {
                                 const [key, ...valueParts] = line.split(':');
                                 const value = valueParts.join(':').trim();
-                                const sampleCategory = serumSamples[presetType] || 'Strings';
-                                const validSamplesForType = serumSamples[sampleCategory];
-                                if (!validSamplesForType.includes(value)) return `${key}: ${validSamplesForType[Math.floor(Math.random() * validSamplesForType.length)]}`;
+                                const validSamplesForType = serumSamples[presetType];
+                                if (validSamplesForType && !validSamplesForType.includes(value)) {
+                                    const randomValidSample = validSamplesForType[Math.floor(Math.random() * validSamplesForType.length)];
+                                    return `${key}: ${randomValidSample}`;
+                                }
                             }
                             return line;
                         });
