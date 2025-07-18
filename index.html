@@ -148,7 +148,7 @@
             { name: 'Future Bass', icon: '🎶' },
             { name: 'Lo-fi', icon: '☕' },
             { name: 'Trap', icon: '⛓️', subgenres: ['Hardwave', 'Hybrid Trap', 'Cloud Rap'] },
-            { name: 'Drill', icon: '�', subgenres: ['UK Drill', 'NY Drill', 'Jersey Drill'] },
+            { name: 'Drill', icon: '🔪', subgenres: ['UK Drill', 'NY Drill', 'Jersey Drill'] },
             { name: 'Phonk', icon: '💀', subgenres: ['Drift Phonk', 'Memphis Phonk', 'Phonk Wave'] },
             { name: 'Synthwave', icon: '🌅', subgenres: ['Darksynth', 'Outrun', 'Retrowave'] },
             { name: 'Drum & Bass', icon: '🥁', subgenres: ['Neurofunk', 'Liquid D&B', 'Jump-Up', 'Dancefloor D&B'] },
@@ -203,7 +203,8 @@
             'Organics': ['AC hum1', 'AC hum2', 'Air Can 1', 'Air Can 2', 'Air Can 3', 'Air Can 4', 'Air Can 5', 'CymLoop', 'CymMicBleed', 'H-Breath', 'Paper Bag', 'S-Sound', 'Shush 1', 'Shush 2', 'Squeeky', 'WindChimes'],
             'S2 Noises': ['808 Transient', 'Arctic Visit', 'Blip', 'Cicadas', 'Crackle', 'Egtr Mute', 'Egtr Neck Down', 'Egtr Neck Up', 'Fizz', 'FretNoise A', 'FretNoise B', 'FretNoise C', 'HP12 Pink Noise (Mono)', 'HP12 Pink Noise (Stereo)', 'HP12 White Noise (Stereo)', 'Keys and Ball', 'Pebbles in Tube', 'Radio Glitch', 'Rain 100 Hgh', 'Rising Wind', 'SaW', 'Screws in Bowl', 'Sine Wave C', 'Stretched Vlnyl', 'Vinyl Crackle', 'Whif'],
             'SOR': ['Analog Flow', 'Atmos 05', 'Atmos 07', 'Atmos 11', 'Atmos 14', 'Atmos 18', 'Atmos 20', 'Atmos 44', 'Atmos 45', 'Atmos 47', 'Atmos 52', 'Bonecrusher', 'Dark Phuture', 'Electric Bubbles', 'Electricity', 'Elysium', 'FX5', 'Horns Of Fear', 'Horrorwind', 'Metalmaster', 'Place f Fear', 'Polar 1', 'Polar 2', 'Prophecy', 'Rising', 'Strange Flow', 'Waterworld'],
-            'Color': ['White', 'Pink', 'Brown', 'Geiger']
+            'Color': ['White', 'Pink', 'Brown', 'Geiger'],
+            'Acoustic': ['Breathy Pianoish', 'EPiano Chord', 'Piano High Long Tail', 'Piano Middle C', '44', 'Piano', 'Sympathy Piano C4', 'Aztec Pipe', 'Betty', 'Flute Delay', 'Flute Fula Long', 'Flute Fula', 'Flute Long Stab', 'Flute Long Vibrato', 'Flute Rainforest', 'Flute Staccato', 'Flute Virtual', 'Flute Warm', 'Pan Flute', 'Savanna', 'Brass WallLow', 'Horn Stab Emin', 'Trombone Alt', 'II', 'stc A#1', 'GG3', 'Trombone short', 'Trombone short stc', 'Trombone', 'Tuba short stc G1', 'Celli ColLegno F#1', 'Celli Short G#2', 'Cello Finger Gliss UpC2', 'Doubled Tension', 'Doubled Vibrato', 'Erhu', 'Horsehead Fiddle', 'Morin Khuur Sustained', 'Strings Crystal Joy', 'Strings Heady', 'Strings Oblinas', 'Unhappy Chatty Cello', 'Upright Bass rco Long', 'Upright Bass Arco Short', 'ViolinsHalf Harm Glissh E5']
         };
         
         const allValidWavetables = Object.entries(serumWavetables).flatMap(([category, tables]) => tables.map(table => `${category} > ${table}`));
@@ -448,6 +449,7 @@
                 - **S2 Noises:** ${serumNoises['S2 Noises'].join(', ')}
                 - **SOR:** ${serumNoises.SOR.join(', ')}
                 - **Color:** ${serumNoises.Color.join(', ')}
+                - **Acoustic:** ${serumNoises.Acoustic.join(', ')}
             `;
 
             const serumFilterKnowledge = `
@@ -508,7 +510,7 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Level: [Crucial for the low-end foundation. Set appropriately for the sound type.]
 
 ### NOISE OSCILLATOR
-- Type: [Refer to the **Serum Noise Knowledge Base** and choose an appropriate sample. Format it as "Category > SampleName".]
+- Type: [Refer to the **Serum Noise Knowledge Base** and choose an appropriate sample. If the sound type is acoustic (Piano, Strings, etc.), strongly consider using a sample from the 'Acoustic' category. Format it as "Category > SampleName".]
 - Pitch: [Adjust if using a tonal sample.]
 - Level: [Use subtly to add texture and character without overpowering the sound.]
 
@@ -687,4 +689,3 @@ Provide the detailed settings below, starting with a unique, evocative name for 
     </script>
 </body>
 </html>
-�
