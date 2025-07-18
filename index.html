@@ -333,7 +333,7 @@
 
             const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
             const character = `${mood}, ${getRandom(['analog', 'digital', 'warm', 'bright', 'gritty', 'glassy', 'metallic', 'wooden', 'breathy'])}, and ${getRandom(['punchy', 'driving', 'relaxed', 'plucky', 'sustained', 'evolving', 'chaotic', 'rhythmic'])}`;
-            const seed = getRandom(["The core rhythmic element must come from LFO 2...", "The FX rack MUST use a Phaser or Flanger BEFORE the main distortion...", "Macro 1 MUST seamlessly transform the sound...", "The sound must heavily feature the 'Bend+' warp mode on OSC A...", "The filter's Drive should be modulated by its own Envelope..."]);
+            const seed = getRandom(["The core rhythmic element must come from LFO 2, set to a complex custom shape in 'Envelope' mode, modulating the filter cutoff and oscillator pitch.", "The FX rack MUST use a Phaser or Flanger BEFORE the main distortion and reverb to create a unique texture.", "Macro 1 MUST seamlessly transform the sound from a short, dry pluck into a vast, washed-out ambient pad by controlling Reverb Mix, ENV 1 Release, and Filter Cutoff.", "The sound must heavily feature the 'Bend+' warp mode on OSC A, modulated by a very fast, chaotic LFO.", "The filter's Drive should be modulated by its own Envelope (ENV 2), creating a sound that gets dirtier on the attack."]);
 
             let specialInstructions = '';
             if (acousticTypes.includes(type)) {
@@ -351,7 +351,39 @@ ${specialInstructions}
 Provide the detailed settings below, starting with a unique name for the preset.
 **IMPORTANT:** Use '###' as a separator for each main section. Use 'Key: Value' format for all parameters. Be specific and use realistic values. For wavetables, use the format "Category > WavetableName".
 
-### PRESET NAME...`; // Abbreviated for brevity
+### PRESET NAME
+- Name: [Create a unique, evocative name for this specific preset]
+### PRESET DESCRIPTION
+- Description: [Describe the character and ideal use for this sound in 1-2 sentences.]
+### OSC A
+- Wavetable: [e.g., Analog > Sawtooth]
+### OSC B
+- Wavetable: [e.g., Analog > Juno]
+### SUB OSCILLATOR
+- Waveform: [e.g., Sine]
+### NOISE OSCILLATOR
+- Type: [For acoustic types, use a sample like 'Piano_F3'. For others, e.g., 'Analog > J106 HPF']
+- Keytrack: [On/Off]
+- Pitch: [Value]
+### FILTER
+- Type: [e.g., MG Low 24]
+### LFO 1
+- Shape: [e.g., Triangle]
+### ENV 1 (AMP)
+- Attack: [ms]
+### VOICING
+- Mode: [Mono or Poly]
+### FX RACK
+- Slot 1: [Effect Type]
+- Slot 2: [Effect Type]
+- Slot 3: [Effect Type]
+### MACRO CONTROLS
+- Macro 1 Name: [Invent a creative name, e.g., "Grit", "Shimmer", "Warp"]
+- Macro 1 -> Destination 1: [Parameter Name, e.g., Filter Cutoff]
+- Macro 1 -> Range 1: [Modulation range, e.g., 20% -> 85%]
+- Macro 1 -> Destination 2: [Parameter Name, e.g., OSC A WT-Pos]
+- Macro 1 -> Range 2: [Modulation range, e.g., 0 -> 128]
+`;
         };
 
         async function generatePreset() {
