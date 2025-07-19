@@ -100,28 +100,28 @@
         
         <section class="glass-card p-6 my-10 animate-fade-in" style="animation-delay: 0.4s;">
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div>
-                    <label for="type-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">2. Choose a Type</label>
-                    <select id="type-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
-                        <!-- Type options will be injected here -->
-                    </select>
-                </div>
-                <div>
-                    <label for="mood-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">3. Set the Mood</label>
-                    <select id="mood-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
-                        <!-- Mood options will be injected here -->
-                    </select>
-                </div>
-            </div>
-            <div class="mb-6">
-                <label for="inspired-by-input" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">4. Inspired By (Optional)</label>
-                <input type="text" id="inspired-by-input" placeholder="e.g., a Hans Zimmer pad, Flume-style chords" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
-            </div>
-            <div>
-                <button id="generate-button" class="generate-button w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2.5 px-6 rounded-md shadow-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:cursor-not-allowed flex items-center justify-center">
-                    5. Generate Preset
-                </button>
-            </div>
+                 <div>
+                     <label for="type-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">2. Choose a Type</label>
+                     <select id="type-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+                         <!-- Type options will be injected here -->
+                     </select>
+                 </div>
+                 <div>
+                     <label for="mood-select" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">3. Set the Mood</label>
+                     <select id="mood-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+                         <!-- Mood options will be injected here -->
+                     </select>
+                 </div>
+             </div>
+             <div class="mb-6">
+                 <label for="inspired-by-input" class="block text-sm font-bold text-gray-300 mb-2 text-center md:text-left">4. Inspired By (Optional)</label>
+                 <input type="text" id="inspired-by-input" placeholder="e.g., a Hans Zimmer pad, Flume-style chords" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+             </div>
+             <div>
+                 <button id="generate-button" class="generate-button w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2.5 px-6 rounded-md shadow-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:cursor-not-allowed flex items-center justify-center">
+                     5. Generate Preset
+                 </button>
+             </div>
         </section>
 
         <section id="results-section" class="min-h-[24rem]">
@@ -151,7 +151,7 @@
             { name: 'Drill', icon: '🔪', subgenres: ['UK Drill', 'NY Drill', 'Jersey Drill'] },
             { name: 'Phonk', icon: '💀', subgenres: ['Drift Phonk', 'Memphis Phonk', 'Phonk Wave'] },
             { name: 'Synthwave', icon: '🌅', subgenres: ['Darksynth', 'Outrun', 'Retrowave'] },
-            { name: 'Drum & Bass', icon: '🥁', subgenres: ['Neurofunk', 'Liquid D&B', 'Jump-Up', 'Dancefloor D&B'] },
+            { name: 'Drum & Bass', icon: '�', subgenres: ['Neurofunk', 'Liquid D&B', 'Jump-Up', 'Dancefloor D&B'] },
             { name: 'Hip Hop', icon: '🎤' },
             { name: 'Pop', icon: '🌟', subgenres: ['Synth-Pop', 'Hyperpop', 'K-Pop', 'Dance-Pop'] },
             { name: 'R&B', icon: '💖', subgenres: ['Contemporary R&B', 'Alternative R&B'] },
@@ -529,9 +529,13 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 ### PRESET DESCRIPTION
 - Description: [Describe the character and ideal use for this sound in 1-2 sentences, keeping the genre in mind]
 
+### TIMBRE GOAL
+- Goal: [Based on the genre and character, describe the core texture you want to build. e.g., "Create a warm, detuned analog texture by blending two slightly different saw waves," or "Develop a gritty, metallic sound using FM synthesis between a basic shape and a complex digital table."]
+
 ### OSC A
 - **Task:** Define all parameters for Oscillator A.
 - Wavetable: [Choose a wavetable that is highly appropriate for the genre]
+- Rationale: [In one sentence, explain WHY this wavetable is the correct choice for the requested sound and genre.]
 - Octave: [-2 to +2]
 - Semitone: [-12 to +12]
 - Fine Tune: [-100 to +100 cents]
@@ -548,6 +552,7 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 ### OSC B
 - **Task:** Define all parameters for Oscillator B.
 - Wavetable: [Choose a wavetable that complements OSC A.]
+- Rationale: [In one sentence, explain WHY this wavetable choice complements OSC A and the overall sound.]
 - Octave: [-2 to +2]
 - Semitone: [-12 to +12]
 - Fine Tune: [-100 to +100 cents]
@@ -576,6 +581,7 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 
 ### FILTER
 - Type: [Refer to the **Serum Filter Knowledge Base** and choose a professional and genre-appropriate filter type. **Do NOT default to MG Low 24.** Do NOT use noise samples here.]
+- Rationale: [Explain WHY this filter type and its starting settings are appropriate for the genre and sound.]
 - Cutoff: [Set a musically useful starting point.]
 - Resonance: [Use sparingly for character.]
 - Drive: [Add subtle warmth and saturation.]
@@ -599,10 +605,10 @@ ${type === 'Arp' ? `
 
 ### ENV 1 (AMP)
 - **Task:** Define the main amplitude envelope. The shape MUST be appropriate for the chosen preset type.
-- Attack: [If Type is 'Pad', use > 500ms. If 'Pluck' or 'Bass', use < 10ms.]
+- Attack: [If Type is 'Pad', use > 500ms. If 'Pluck' or 'Bass', use < 10ms. AVOID long attacks for percussive sounds.]
 - Decay: [If Type is 'Pluck' or 'Bass', use ~400ms.]
-- Sustain: [If Type is 'Pluck' or 'Bass', use -inf dB.]
-- Release: [If Type is 'Pad', use > 1.5s.]
+- Sustain: [If Type is 'Pad', use > -10dB. If 'Pluck' or 'Bass', use -inf dB. AVOID high sustain for percussive sounds.]
+- Release: [If Type is 'Pad', use > 1.5s. AVOID long releases for tight basses.]
 
 ### GLOBAL SETTINGS
 - **Task:** Add subtle analog-style imperfections if appropriate for the genre.
@@ -622,26 +628,30 @@ ${type === 'Arp' ? `
 - Routing 3 Amount: [Specify a percentage]
 
 ### FX RACK
-- **Task:** Create a professional, genre-appropriate FX chain using **ONLY the effects listed in the Serum FX Knowledge Base**. Do not use noise samples here. You **MUST use at least 2 FX slots**, but use up to 4 if it serves the sound.
-- **For each slot used, you MUST be specific** about the effect name and its key parameters as described in the knowledge base.
+- **Task:** Create a professional, genre-appropriate FX chain using **ONLY the effects listed in the Serum FX Knowledge Base**. You **MUST use at least 2 FX slots**. For each slot, you MUST be specific about the effect name, its key parameters, and a rationale for its use.
+- **Guideline:** Order the FX logically: Start with **Dynamics/Shaping** (Compressor, Distortion, EQ), then **Modulation** (Chorus, Flanger, Phaser), and end with **Space/Time** (Delay, Reverb).
 - Slot 1: [Effect Name: Type/Mode, Key Parameter 1, Key Parameter 2...]
+- Slot 1 Rationale: [Explain why this effect is in this position and how it contributes to the sound.]
 - Slot 2: [Effect Name: Type/Mode, Key Parameter 1, Key Parameter 2...]
+- Slot 2 Rationale: [Explain why this effect is in this position and how it contributes to the sound.]
 - (Slot 3): [Optional, if needed for the sound]
+- (Slot 3 Rationale): [If used, explain its purpose.]
 - (Slot 4): [Optional, if needed for the sound]
+- (Slot 4 Rationale): [If used, explain its purpose.]
 
 ### MACRO CONTROLS
 - **Task:** Define useful macros to make the preset expressive. You **MUST define at least 2 macros**. For complex sounds, defining 3 or 4 is highly encouraged.
-- **For each macro, you MUST be specific** about its Name, its primary Destination, and a musically useful modulation Range.
-- Macro 1 Name:
-- Macro 1 -> Destination 1:
-- Macro 1 -> Range 1:
-- Macro 2 Name:
-- Macro 2 -> Destination 1:
-- Macro 2 -> Range 1:
-- (Macro 3 Name): [Optional, if needed for the sound]
+- **For each macro, you MUST be specific** about its purpose-driven Name (e.g., "Filter", "Grit", "Width", "FX Wetness"), its primary Destination, and a musically useful modulation Range.
+- Macro 1 Purpose: [Name the macro based on its function]
+- Macro 1 -> Destination 1: [Assign to the most relevant parameter for its purpose]
+- Macro 1 -> Range 1: [Set a musically useful range]
+- Macro 2 Purpose: [Name the macro based on its function]
+- Macro 2 -> Destination 1: [Assign to the most relevant parameter for its purpose]
+- Macro 2 -> Range 1: [Set a musically useful range]
+- (Macro 3 Purpose): [Optional, if needed for the sound]
 - (Macro 3 -> Destination 1):
 - (Macro 3 -> Range 1):
-- (Macro 4 Name): [Optional, if needed for the sound]
+- (Macro 4 Purpose): [Optional, if needed for the sound]
 - (Macro 4 -> Destination 1):
 - (Macro 4 -> Range 1):
 `;
@@ -792,3 +802,4 @@ ${type === 'Arp' ? `
     </script>
 </body>
 </html>
+�
