@@ -153,7 +153,7 @@
             { name: 'Synthwave', icon: '🌅', subgenres: ['Darksynth', 'Outrun', 'Retrowave'] },
             { name: 'Drum & Bass', icon: '🥁', subgenres: ['Neurofunk', 'Liquid D&B', 'Jump-Up', 'Dancefloor D&B'] },
             { name: 'Hip Hop', icon: '🎤' },
-            { name: 'Pop', icon: '�', subgenres: ['Synth-Pop', 'Hyperpop', 'K-Pop', 'Dance-Pop'] },
+            { name: 'Pop', icon: '🌟', subgenres: ['Synth-Pop', 'Hyperpop', 'K-Pop', 'Dance-Pop'] },
             { name: 'R&B', icon: '💖', subgenres: ['Contemporary R&B', 'Alternative R&B'] },
             { name: 'Soul', icon: '🎷', subgenres: ['Neo-Soul', 'Modern Soul', 'Psychedelic Soul'] },
             { name: 'Indie', icon: '🎸', subgenres: ['Indie Pop', 'Indie Rock', 'Dream Pop'] },
@@ -532,6 +532,9 @@
             const acousticTypes = ['Piano', 'Brass', 'Strings', 'Woodwind'];
             let acousticInstruction = acousticTypes.includes(type) ? `\n**Acoustic Emulation Priority:** The user has selected an acoustic instrument ('${type}'). Your highest priority is to follow the **Acoustic Emulation Guide** for this instrument type.` : '';
 
+            const foundationalTypes = ['Bass', 'Pad', 'Pluck', 'Keys'];
+            let foundationalShapeInstruction = foundationalTypes.includes(type) ? `\n**Wavetable Starting Point:** For this sound type ('${type}'), prioritize using fundamental wavetables from 'Analog > Basic Shapes' (Sine, Triangle, Saw, Square). These are the building blocks of synthesis. Only choose a more complex wavetable if it is absolutely essential for the specific character requested. Justify your choice in the Rationale.` : '';
+
             return `You are a world-class sound designer using Xfer Records Serum 2. Your task is to create a highly detailed, creative, and professionally-authentic preset. Your highest priority is accuracy to the requested genre and professional quality.
 
 **Primary Goal:**
@@ -540,6 +543,7 @@
 - Character: **${character}**
 ${inspirationInstruction}
 ${acousticInstruction}
+${foundationalShapeInstruction}
 
 **Sound Design Principles for ${fullGenre}:**
 ${genreSpecifics}
