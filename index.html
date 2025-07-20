@@ -533,7 +533,18 @@
             let acousticInstruction = acousticTypes.includes(type) ? `\n**Acoustic Emulation Priority:** The user has selected an acoustic instrument ('${type}'). Your highest priority is to follow the **Acoustic Emulation Guide** for this instrument type.` : '';
 
             const foundationalTypes = ['Bass', 'Pad', 'Pluck', 'Keys'];
-            let foundationalShapeInstruction = foundationalTypes.includes(type) ? `\n**Wavetable Starting Point:** For this sound type ('${type}'), prioritize using fundamental wavetables from 'Analog > Basic Shapes' (Sine, Triangle, Saw, Square). These are the building blocks of synthesis. Only choose a more complex wavetable if it is absolutely essential for the specific character requested. Justify your choice in the Rationale.` : '';
+            let foundationalShapeInstruction = foundationalTypes.includes(type) ? `\n**Wavetable Philosophy:** For foundational sounds like this ('${type}'), great sound design often starts with the fundamental building blocks: Sine, Triangle, Saw, and Square waves. Build the sound from the ground up.` : '';
+
+            let oscATask = `- **Task:** Define all parameters for Oscillator A.`;
+            if (foundationalTypes.includes(type)) {
+                oscATask += ` **Crucial Rule:** For this '${type}' preset, you MUST start by selecting a wavetable from 'Analog > Basic Shapes' (Sine, Triangle, Saw, or Square). The goal is to build the sound from fundamentals. You may only select a different wavetable if the 'Sound Design Principles' for the specific genre *explicitly* name a different one as being essential. If you deviate, you must state this in your Rationale.`;
+            }
+
+            let oscBTask = `- **Task:** Define all parameters for Oscillator B.`;
+             if (foundationalTypes.includes(type)) {
+                oscBTask += ` **Rule:** The wavetable for OSC B should complement the fundamental shape chosen for OSC A. This could be another basic shape (perhaps detuned or at a different octave) or a slightly more complex table if needed for texture (e.g., 'Analog > PWM').`;
+            }
+
 
             return `You are a world-class sound designer using Xfer Records Serum 2. Your task is to create a highly detailed, creative, and professionally-authentic preset. Your highest priority is accuracy to the requested genre and professional quality.
 
@@ -568,7 +579,7 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Goal: [Based on the genre and character, describe the core texture you want to build. e.g., "Create a warm, detuned analog texture by blending two slightly different saw waves," or "Develop a gritty, metallic sound using FM synthesis between a basic shape and a complex digital table."]
 
 ### OSC A
-- **Task:** Define all parameters for Oscillator A.
+${oscATask}
 - Wavetable: [Choose a wavetable that is highly appropriate for the genre]
 - Rationale: [In one sentence, explain WHY this wavetable is the correct choice for the requested sound and genre.]
 - Octave: [-2 to +2]
@@ -585,7 +596,7 @@ Provide the detailed settings below, starting with a unique, evocative name for 
 - Warp Mode 2: [(Optional) Choose a second mode if needed to create a complex timbre.]
 
 ### OSC B
-- **Task:** Define all parameters for Oscillator B.
+${oscBTask}
 - Wavetable: [Choose a wavetable that complements OSC A.]
 - Rationale: [In one sentence, explain WHY this wavetable choice complements OSC A and the overall sound.]
 - Octave: [-2 to +2]
